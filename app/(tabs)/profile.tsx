@@ -1,18 +1,17 @@
-import { onSnapshot, query, where } from 'firebase/firestore';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, Pressable, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { Palette } from '@/constants/colors';
 import { signOutUser } from '@/lib/auth';
-import { reportsCollection } from '@/lib/firestore';
 import { formatDate } from '@/lib/format';
 import {
   requestNotificationPermissions,
   setNotificationsEnabled as persistNotificationsEnabled,
 } from '@/lib/notifications';
 import { useAuthStore } from '@/store/useAuthStore';
+import { useMyReportsStore } from '@/store/useMyReportsStore';
 import { useNotificationPreferenceStore } from '@/store/useNotificationPreferenceStore';
 
 export default function ProfileScreen() {
@@ -24,35 +23,14 @@ export default function ProfileScreen() {
     (state) => state.setEnabled
   );
 
-  const [reportCount, setReportCount] = useState<number | null>(null);
-  const [countError, setCountError] = useState<string | null>(null);
+  const reportCount = useMyReportsStore((state) =>
+    state.status === 'ready' ? state.reports.length : null
+  );
+  const countError = useMyReportsStore((state) =>
+    state.status === 'error' ? 'Could not load your report count.' : null
+  );
   const [signingOut, setSigningOut] = useState(false);
   const [signOutError, setSignOutError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!user) {
-      setReportCount(null);
-      return;
-    }
-
-    // No orderBy — a bare equality filter needs no composite index, and a
-    // count is all this screen needs.
-    const reportsQuery = query(reportsCollection, where('userId', '==', user.uid));
-
-    const unsubscribe = onSnapshot(
-      reportsQuery,
-      (snapshot) => {
-        setReportCount(snapshot.size);
-        setCountError(null);
-      },
-      (err) => {
-        console.error('Failed to load report count:', err);
-        setCountError('Could not load your report count.');
-      }
-    );
-
-    return unsubscribe;
-  }, [user]);
 
   const handleSignOut = async () => {
     setSignOutError(null);

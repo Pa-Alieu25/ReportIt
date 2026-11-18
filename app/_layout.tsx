@@ -8,6 +8,7 @@ import 'react-native-reanimated';
 import { Palette } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { useAuthSession } from '@/hooks/use-auth-session';
+import { useMyReportsSync } from '@/hooks/use-my-reports-sync';
 import { useReportStatusNotifications } from '@/hooks/use-report-status-notifications';
 import { getOnboardingComplete } from '@/lib/onboarding';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -53,8 +54,9 @@ export default function RootLayout() {
   const setOnboardingCompleted = useOnboardingStore((state) => state.setCompleted);
 
   useAuthSession();
-  // Only does anything once a user is signed in (reads directly from
-  // useAuthStore), so it's safe to mount unconditionally here.
+  // The next two only do anything once a user is signed in (they read the
+  // user from useAuthStore), so they're safe to mount unconditionally here.
+  useMyReportsSync();
   useReportStatusNotifications();
 
   useEffect(() => {
