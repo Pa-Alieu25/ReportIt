@@ -6,6 +6,8 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // ---------- helpers ----------
+
     // Returns true if the request is made by a signed-in user.
     function isSignedIn() {
       return request.auth != null;
@@ -17,38 +19,123 @@ service cloud.firestore {
     }
 
     // Returns true if the signed-in user's own users/{uid} doc has role == "admin".
-    // Reads the caller's own document, which is always allowed by the users rules below.
     function isAdmin() {
       return isSignedIn() &&
         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    // True if an update only touches the listed fields.
+    function onlyChanges(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    function isString(value, minLen, maxLen) {
+      return value is string && value.size() >= minLen && value.size() <= maxLen;
+    }
+
+    function isOptionalString(value, maxLen) {
+      return value == null || isString(value, 0, maxLen);
+    }
+
+    // Keep in sync with types/models.ts.
+    function isCategory(value) {
+      return value in ['Potholes', 'Water Leak', 'Gutters', 'Flooding', 'Streetlights',
+        'Power Outage', 'Illegal Dumping', 'Public Facility', 'Other'];
+    }
+
+    function isArea(value) {
+      return value in ['Banjul City', 'Kanifing Municipal', 'West Coast (Brikama)',
+        'North Bank (Kerewan)', 'Lower River (Mansakonko)', 'Central River North (Kuntaur)',
+        'Central River South (Janjanbureh)', 'Upper River (Basse)'];
+    }
+
+    function isStatus(value) {
+      return value in ['Pending', 'Under Review', 'In Progress', 'Resolved', 'Rejected'];
+    }
+
+    function isLocation(value) {
+      return value == null || (
+        value is map &&
+        value.keys().hasAll(['lat', 'lng']) && value.keys().hasOnly(['lat', 'lng']) &&
+        value.lat is number && value.lat >= -90 && value.lat <= 90 &&
+        value.lng is number && value.lng >= -180 && value.lng <= 180
+      );
+    }
+
+    // Photos are only ever hosted on Cloudinary.
+    function isImageUrl(value) {
+      return value == null || (
+        isString(value, 1, 500) && value.matches('https://res[.]cloudinary[.]com/.*')
+      );
+    }
+
+    // Fields a citizen controls on their own report.
+    function hasValidCitizenFields(data) {
+      return isString(data.title, 1, 120) &&
+        isString(data.description, 1, 2000) &&
+        isCategory(data.category) &&
+        isImageUrl(data.imageUrl) &&
+        isLocation(data.location) &&
+        isOptionalString(data.address, 300);
+    }
+
+    // ---------- users ----------
+
     match /users/{uid} {
       // A user can read only their own profile document; admins can read any profile.
       allow read: if isOwner(uid) || isAdmin();
 
-      // A user can create only their own profile, and only as a citizen.
-      allow create: if isOwner(uid) && request.resource.data.role == 'citizen';
+      // A user can create only their own profile, only as a citizen, and only
+      // with the expected fields.
+      allow create: if isOwner(uid) &&
+        request.resource.data.keys().hasOnly(['uid', 'name', 'email', 'role', 'createdAt']) &&
+        request.resource.data.uid == uid &&
+        request.resource.data.role == 'citizen' &&
+        isString(request.resource.data.name, 1, 100) &&
+        isString(request.resource.data.email, 3, 254) &&
+        request.resource.data.createdAt == request.time;
 
-      // A user can update their own profile but never change their role —
-      // admins are promoted by editing the document in the Firebase console.
-      allow update: if isOwner(uid) && request.resource.data.role == resource.data.role;
+      // A user can change their own name, nothing else. Roles are only ever
+      // changed in the Firebase console.
+      allow update: if isOwner(uid) &&
+        onlyChanges(['name']) &&
+        isString(request.resource.data.name, 1, 100);
     }
+
+    // ---------- reports ----------
 
     match /reports/{reportId} {
       // Any authenticated user can read reports (needed for the public map view).
       allow read: if isSignedIn();
 
-      // A user can create a report only if they set themselves as the owner.
-      allow create: if isOwner(request.resource.data.userId);
+      // A citizen can file a report only as themselves, only as a fresh
+      // Pending report with no admin notes, and only with valid fields.
+      allow create: if isOwner(request.resource.data.userId) &&
+        request.resource.data.keys().hasOnly(['id', 'userId', 'title', 'description', 'category',
+          'status', 'imageUrl', 'location', 'address', 'area', 'createdAt', 'updatedAt', 'adminNotes']) &&
+        request.resource.data.id == reportId &&
+        request.resource.data.status == 'Pending' &&
+        request.resource.data.adminNotes == null &&
+        isArea(request.resource.data.area) &&
+        request.resource.data.createdAt == request.time &&
+        request.resource.data.updatedAt == request.time &&
+        hasValidCitizenFields(request.resource.data);
 
-      // Admins can update any report (e.g. to change status or add adminNotes).
-      // A non-admin owner can update their own report, but only if status and
-      // adminNotes are left unchanged from the existing document.
-      allow update: if isAdmin() ||
+      // Admins can change only the status and notes.
+      // Owners can edit their own report's content, but never its status,
+      // admin notes, owner, id or creation time.
+      allow update: if request.resource.data.updatedAt == request.time && (
+        (isAdmin() &&
+          onlyChanges(['status', 'adminNotes', 'updatedAt']) &&
+          isStatus(request.resource.data.status) &&
+          isOptionalString(request.resource.data.adminNotes, 2000)) ||
         (isOwner(resource.data.userId) &&
-          request.resource.data.status == resource.data.status &&
-          request.resource.data.adminNotes == resource.data.adminNotes);
+          onlyChanges(['title', 'description', 'category', 'area', 'imageUrl', 'location',
+            'address', 'updatedAt']) &&
+          hasValidCitizenFields(request.resource.data) &&
+          (request.resource.data.get('area', null) == null ||
+            isArea(request.resource.data.area)))
+      );
 
       // A user can delete only their own report; admins can delete any report.
       allow delete: if isOwner(resource.data.userId) || isAdmin();

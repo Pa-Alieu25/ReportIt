@@ -206,6 +206,7 @@ export default function ReportScreen() {
         <TextInput
           value={title}
           onChangeText={setTitle}
+          maxLength={120}
           placeholder="Short summary, e.g. Pothole on Kairaba Avenue"
           placeholderTextColor="#9CA3AF"
           className="mb-1 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
@@ -220,6 +221,7 @@ export default function ReportScreen() {
         <TextInput
           value={description}
           onChangeText={setDescription}
+          maxLength={2000}
           placeholder="Describe the issue in detail"
           placeholderTextColor="#9CA3AF"
           multiline

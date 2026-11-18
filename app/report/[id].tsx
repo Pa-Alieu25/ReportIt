@@ -380,6 +380,7 @@ export default function ReportDetailScreen() {
                   setSaveError(null);
                 }}
                 placeholder="Add notes visible to the reporter"
+                maxLength={2000}
                 placeholderTextColor="#9CA3AF"
                 multiline
                 numberOfLines={4}
