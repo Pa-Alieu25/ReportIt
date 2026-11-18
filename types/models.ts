@@ -6,7 +6,9 @@ export type Category =
   | 'Potholes'
   | 'Water Leak'
   | 'Gutters'
+  | 'Flooding'
   | 'Streetlights'
+  | 'Power Outage'
   | 'Illegal Dumping'
   | 'Public Facility'
   | 'Other';
