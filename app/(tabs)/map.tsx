@@ -22,6 +22,7 @@ const LEGEND_ITEMS: { label: string; color: string }[] = [
   { label: 'Under Review', color: Palette.status.underReview },
   { label: 'In Progress', color: Palette.status.inProgress },
   { label: 'Resolved', color: Palette.status.resolved },
+  { label: 'Rejected', color: Palette.status.rejected },
 ];
 
 // Leaflet + OpenStreetMap via CDN, loaded inside a WebView — no native map
@@ -44,19 +45,21 @@ const LEAFLET_HTML = `
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    var DEFAULT_CENTER = [7.9465, -1.0232]; // roughly the geographic center of Ghana
-    var DEFAULT_ZOOM = 7;
+    // The Gambia's bounding box — the country is long and narrow, so framing
+    // it by bounds fits it on any screen width, unlike a fixed center + zoom.
+    var DEFAULT_BOUNDS = [[13.06, -16.82], [13.83, -13.79]];
     var MAX_FIT_ZOOM = 16; // cap auto-zoom so a single pin doesn't zoom in absurdly tight
 
     var STATUS_COLORS = {
       'Pending': '#F59E0B',
       'Under Review': '#3B82F6',
       'In Progress': '#6366F1',
-      'Resolved': '#16A34A'
+      'Resolved': '#16A34A',
+      'Rejected': '#DC2626'
     };
     var DEFAULT_COLOR = '#6B7280';
 
-    var map = L.map('map', { zoomControl: true }).setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+    var map = L.map('map', { zoomControl: true }).fitBounds(DEFAULT_BOUNDS);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
@@ -122,7 +125,7 @@ const LEAFLET_HTML = `
       if (points.length > 0) {
         map.fitBounds(points, { padding: [40, 40], maxZoom: MAX_FIT_ZOOM });
       } else {
-        map.setView(DEFAULT_CENTER, DEFAULT_ZOOM);
+        map.fitBounds(DEFAULT_BOUNDS);
       }
     };
 
