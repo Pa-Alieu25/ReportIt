@@ -206,7 +206,7 @@ export default function ReportScreen() {
         <TextInput
           value={title}
           onChangeText={setTitle}
-          placeholder="Short summary, e.g. Pothole on Main Street"
+          placeholder="Short summary, e.g. Pothole on Kairaba Avenue"
           placeholderTextColor="#9CA3AF"
           className="mb-1 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
         />

@@ -60,7 +60,7 @@ export default function SignupScreen() {
           onChangeText={setName}
           autoCapitalize="words"
           autoComplete="name"
-          placeholder="Kwame Mensah"
+          placeholder="Fatou Jallow"
           placeholderTextColor="#9CA3AF"
           className="mb-4 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
         />

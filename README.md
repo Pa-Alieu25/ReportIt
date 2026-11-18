@@ -1,13 +1,13 @@
-# ReportIt Ghana
+# ReportIt Gambia
 
 ReportIt is a mobile app that lets citizens report local infrastructure and
-sanitation issues — potholes, water leaks, broken streetlights, illegal
+sanitation issues — potholes, flooding, water leaks, power outages, illegal
 dumping, and more — directly to the people who can fix them, with a photo,
 a location, and a live status they can follow through to resolution.
 
 ## The problem it solves
 
-Community issues in Ghana (and many other places) often go unreported simply
+Community issues in The Gambia (and many other places) often go unreported simply
 because there's no easy, direct channel between a citizen who notices a
 problem and the people responsible for fixing it. Reports get lost in phone
 calls, social media posts, or word of mouth, with no way to track what
@@ -24,19 +24,20 @@ while the reporter automatically sees the status change and gets notified.
   device.
 - **Home dashboard** — a personal greeting, quick stats (total / pending /
   in progress / resolved), and your most recent reports.
-- **Report submission** — title, description, category picker, an optional
+- **Report submission** — title, description, category picker, the local
+  government area (Banjul, Kanifing, West Coast, etc.), an optional
   photo (camera or gallery, uploaded to Cloudinary), and an optional GPS
   location with reverse-geocoded address.
 - **My Reports** — a real-time list of your own reports with color-coded
   status badges.
 - **Public map** — every report with a location plotted on an interactive
   Leaflet/OpenStreetMap map, pins color-coded by status, auto-fit to frame
-  all pins, with a legend.
+  all pins (or the whole of The Gambia when there are none), with a legend.
 - **Report detail** — full report view with photo, a status timeline
   (Pending → Under Review → In Progress → Resolved, or a distinct Rejected
   end-state with the admin's reason), a small location map, and any admin
   notes.
-- **Admin dashboard** — every report in the system, with status/category
+- **Admin dashboard** — every report in the system, with status/category/area
   filters and text search, admin-only.
 - **Admin status management** — change a report's status (including
   Rejected), write notes visible to the reporter, or delete a report
@@ -90,11 +91,12 @@ One document per citizen-submitted report.
 | `userId`      | `string`                                                                                                                      | uid of the reporting user (report owner)            |
 | `title`       | `string`                                                                                                                      | Short summary                                       |
 | `description` | `string`                                                                                                                      | Full description                                    |
-| `category`    | `"Potholes" \| "Water Leak" \| "Gutters" \| "Streetlights" \| "Illegal Dumping" \| "Public Facility" \| "Other"`              | Issue category                                      |
+| `category`    | `"Potholes" \| "Water Leak" \| "Gutters" \| "Flooding" \| "Streetlights" \| "Power Outage" \| "Illegal Dumping" \| "Public Facility" \| "Other"` | Issue category                                      |
 | `status`      | `"Pending" \| "Under Review" \| "In Progress" \| "Resolved" \| "Rejected"`                                                    | Only admins may change this (enforced in rules)     |
 | `imageUrl`    | `string \| null`                                                                                                              | Cloudinary URL (Firebase Storage is not used)       |
 | `location`    | `{ lat: number; lng: number } \| null`                                                                                       | Geographic coordinates, if provided                 |
 | `address`     | `string \| null`                                                                                                              | Human-readable address, if provided                 |
+| `area`        | `"Banjul City" \| "Kanifing Municipal" \| "West Coast (Brikama)" \| "North Bank (Kerewan)" \| "Lower River (Mansakonko)" \| "Central River North (Kuntaur)" \| "Central River South (Janjanbureh)" \| "Upper River (Basse)" \| null` | Local government area; required on new reports, `null` on older ones |
 | `createdAt`   | `Timestamp`                                                                                                                   | Firestore server timestamp                          |
 | `updatedAt`   | `Timestamp`                                                                                                                   | Firestore server timestamp, updated on every edit   |
 | `adminNotes`  | `string \| null`                                                                                                              | Only admins may set/change this (enforced in rules) |
@@ -106,6 +108,7 @@ One document per citizen-submitted report.
 - A user can update/delete their own reports, but cannot change `status` or `adminNotes`.
 - Admins (`users/{uid}.role == "admin"`) can read and update any report, including deleting it.
 - A user can read/write only their own `users/{uid}` document; admins can read any user document.
+- A user can only create their profile with `role: "citizen"` and can never change their own `role`. Promote an admin by editing their `users/{uid}` document in the Firebase console.
 
 ## Setup
 

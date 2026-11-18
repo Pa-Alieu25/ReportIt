@@ -10,7 +10,7 @@ const SLIDES: { icon: IconSymbolName; title: string; body: string }[] = [
   {
     icon: 'exclamationmark.bubble.fill',
     title: 'Report issues in your community',
-    body: 'See a pothole, a broken streetlight, or illegal dumping? Report it in seconds.',
+    body: 'See a pothole, a flooded road, or illegal dumping in your area? Report it in seconds.',
   },
   {
     icon: 'location.fill',
