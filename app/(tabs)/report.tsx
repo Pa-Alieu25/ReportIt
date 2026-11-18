@@ -140,7 +140,7 @@ export default function ReportScreen() {
       if (photoUri) {
         setPhase('uploading');
         try {
-          imageUrl = await uploadImageToCloudinary(photoUri);
+          imageUrl = await uploadImageToCloudinary(photoUri, user.uid);
         } catch (error) {
           setSubmitError(
             error instanceof Error ? error.message : 'Failed to upload photo. Please try again.'
