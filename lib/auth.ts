@@ -2,13 +2,14 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   signOut,
+  updateProfile,
   type AuthError,
+  type User as FirebaseUser,
 } from 'firebase/auth';
 import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
 
 import { auth } from '@/lib/firebase';
 import { usersCollection } from '@/lib/firestore';
-import type { User } from '@/types/models';
 
 function getFriendlyAuthErrorMessage(error: unknown): string {
   const code = (error as Partial<AuthError>)?.code;
@@ -33,22 +34,60 @@ function getFriendlyAuthErrorMessage(error: unknown): string {
   }
 }
 
+// True while signUp() is still writing the new user's profile, so the
+// profile listener doesn't mistake the not-yet-written profile for a missing one.
+let signUpInProgress = false;
+
+export function isSignUpInProgress(): boolean {
+  return signUpInProgress;
+}
+
+function fallbackName(user: FirebaseUser): string {
+  const fromAuth = user.displayName?.trim();
+  if (fromAuth) return fromAuth.slice(0, 100);
+  const fromEmail = user.email?.split('@')[0]?.trim();
+  return fromEmail ? fromEmail.slice(0, 100) : 'ReportIt user';
+}
+
+// Creates users/{uid} if it doesn't exist yet. Safe to call more than once:
+// it never overwrites an existing profile (which may hold an admin role).
+export async function ensureUserProfile(user: FirebaseUser, name?: string): Promise<void> {
+  const ref = doc(usersCollection, user.uid);
+  const existing = await getDoc(ref);
+  if (existing.exists()) return;
+
+  await setDoc(ref, {
+    uid: user.uid,
+    name: name?.trim() || fallbackName(user),
+    email: user.email ?? '',
+    role: 'citizen',
+    createdAt: serverTimestamp(),
+  });
+}
+
 export async function signUp(name: string, email: string, password: string) {
+  signUpInProgress = true;
   try {
     const credential = await createUserWithEmailAndPassword(auth, email, password);
-    const uid = credential.user.uid;
 
-    await setDoc(doc(usersCollection, uid), {
-      uid,
-      name,
-      email,
-      role: 'citizen',
-      createdAt: serverTimestamp(),
+    // Keep the name on the auth account too, so a profile can be rebuilt
+    // from it if the Firestore write below fails.
+    await updateProfile(credential.user, { displayName: name }).catch((error) => {
+      console.error('Failed to set display name:', error);
     });
+
+    try {
+      await ensureUserProfile(credential.user, name);
+    } catch (error) {
+      // The account exists; the profile listener retries on next launch.
+      console.error('Failed to create user profile:', error);
+    }
 
     return credential.user;
   } catch (error) {
     throw new Error(getFriendlyAuthErrorMessage(error));
+  } finally {
+    signUpInProgress = false;
   }
 }
 
@@ -67,9 +106,4 @@ export async function signOutUser() {
   } catch (error) {
     throw new Error(getFriendlyAuthErrorMessage(error));
   }
-}
-
-export async function fetchUserProfile(uid: string): Promise<User | null> {
-  const snapshot = await getDoc(doc(usersCollection, uid));
-  return snapshot.exists() ? snapshot.data() : null;
 }

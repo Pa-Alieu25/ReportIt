@@ -1,5 +1,4 @@
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { onAuthStateChanged } from 'firebase/auth';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -8,9 +7,8 @@ import 'react-native-reanimated';
 
 import { Palette } from '@/constants/colors';
 import { useColorScheme } from '@/hooks/use-color-scheme';
+import { useAuthSession } from '@/hooks/use-auth-session';
 import { useReportStatusNotifications } from '@/hooks/use-report-status-notifications';
-import { fetchUserProfile } from '@/lib/auth';
-import { auth } from '@/lib/firebase';
 import { getOnboardingComplete } from '@/lib/onboarding';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
@@ -50,33 +48,14 @@ function RootNavigator() {
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const authLoading = useAuthStore((state) => state.loading);
-  const setUser = useAuthStore((state) => state.setUser);
-  const setProfile = useAuthStore((state) => state.setProfile);
-  const setLoading = useAuthStore((state) => state.setLoading);
 
   const onboardingComplete = useOnboardingStore((state) => state.completed);
   const setOnboardingCompleted = useOnboardingStore((state) => state.setCompleted);
 
+  useAuthSession();
   // Only does anything once a user is signed in (reads directly from
   // useAuthStore), so it's safe to mount unconditionally here.
   useReportStatusNotifications();
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-
-      if (firebaseUser) {
-        const profile = await fetchUserProfile(firebaseUser.uid);
-        setProfile(profile);
-      } else {
-        setProfile(null);
-      }
-
-      setLoading(false);
-    });
-
-    return unsubscribe;
-  }, [setUser, setProfile, setLoading]);
 
   useEffect(() => {
     getOnboardingComplete().then(setOnboardingCompleted);

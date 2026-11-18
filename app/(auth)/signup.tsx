@@ -58,6 +58,7 @@ export default function SignupScreen() {
         <TextInput
           value={name}
           onChangeText={setName}
+          maxLength={100}
           autoCapitalize="words"
           autoComplete="name"
           placeholder="Fatou Jallow"
