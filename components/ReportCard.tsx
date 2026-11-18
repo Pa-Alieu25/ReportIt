@@ -37,7 +37,9 @@ export function ReportCard({ report, onPress }: ReportCardProps) {
           </View>
         </View>
 
-        <Text className="mb-1 text-sm text-gray-500">{report.category}</Text>
+        <Text className="mb-1 text-sm text-gray-500" numberOfLines={1}>
+          {report.area ? `${report.category} · ${report.area}` : report.category}
+        </Text>
 
         <View className="mb-1 flex-row items-center">
           <IconSymbol name="mappin.circle.fill" size={14} color="#9CA3AF" />

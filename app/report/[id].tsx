@@ -302,7 +302,9 @@ export default function ReportDetailScreen() {
               <Text className={`text-xs font-medium ${statusStyle.text}`}>{report.status}</Text>
             </View>
           </View>
-          <Text className="mb-4 text-sm text-gray-500">{report.category}</Text>
+          <Text className="mb-4 text-sm text-gray-500">
+            {report.area ? `${report.category} · ${report.area}` : report.category}
+          </Text>
 
           <Text className="mb-6 text-base text-gray-700">{report.description}</Text>
 

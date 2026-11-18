@@ -13,18 +13,20 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { AREA_ORDER } from '@/constants/area';
 import { CATEGORY_ORDER } from '@/constants/category';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import { getCurrentLocation, reverseGeocode, type Coordinates } from '@/lib/location';
 import { createReport } from '@/lib/reports';
 import { isNonEmpty } from '@/lib/validation';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { Category } from '@/types/models';
+import type { Area, Category } from '@/types/models';
 
 type FormErrors = {
   title?: string;
   description?: string;
   category?: string;
+  area?: string;
 };
 
 export default function ReportScreen() {
@@ -33,6 +35,7 @@ export default function ReportScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
+  const [area, setArea] = useState<Area | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
   const [locationCoords, setLocationCoords] = useState<Coordinates | null>(null);
@@ -52,6 +55,7 @@ export default function ReportScreen() {
     if (!isNonEmpty(title)) nextErrors.title = 'Title is required.';
     if (!isNonEmpty(description)) nextErrors.description = 'Description is required.';
     if (!category) nextErrors.category = 'Please select a category.';
+    if (!area) nextErrors.area = 'Please select an area.';
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -123,7 +127,7 @@ export default function ReportScreen() {
     setSubmitError(null);
     setSuccess(false);
 
-    if (!validate() || !category) return;
+    if (!validate() || !category || !area) return;
 
     if (!user) {
       setSubmitError('You must be signed in to submit a report.');
@@ -154,11 +158,13 @@ export default function ReportScreen() {
         imageUrl,
         location: locationCoords,
         address: locationAddress,
+        area,
       });
 
       setTitle('');
       setDescription('');
       setCategory(null);
+      setArea(null);
       setPhotoUri(null);
       setLocationCoords(null);
       setLocationAddress(null);
@@ -238,6 +244,21 @@ export default function ReportScreen() {
         />
         {errors.category ? (
           <Text className="mb-3 text-sm text-error">{errors.category}</Text>
+        ) : (
+          <View className="mb-3" />
+        )}
+
+        <Text className="mb-1 text-sm font-medium text-gray-700">Area</Text>
+        <SelectField
+          sheetTitle="Which area is this in?"
+          options={AREA_ORDER}
+          value={area}
+          onSelect={setArea}
+          placeholder="Select your area"
+          className="mb-1"
+        />
+        {errors.area ? (
+          <Text className="mb-3 text-sm text-error">{errors.area}</Text>
         ) : (
           <View className="mb-3" />
         )}

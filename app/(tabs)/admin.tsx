@@ -7,18 +7,21 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ReportCard } from '@/components/ReportCard';
 import { SelectField } from '@/components/SelectField';
 import { IconSymbol } from '@/components/ui/icon-symbol';
+import { AREA_ORDER } from '@/constants/area';
 import { CATEGORY_ORDER } from '@/constants/category';
 import { Palette } from '@/constants/colors';
 import { ALL_STATUSES } from '@/constants/status';
 import { reportsCollection } from '@/lib/firestore';
 import { useAuthStore } from '@/store/useAuthStore';
-import type { Category, Report, Status } from '@/types/models';
+import type { Area, Category, Report, Status } from '@/types/models';
 
 type StatusFilter = Status | 'All';
 type CategoryFilter = Category | 'All';
+type AreaFilter = Area | 'All';
 
 const STATUS_FILTERS: StatusFilter[] = ['All', ...ALL_STATUSES];
 const CATEGORY_FILTERS: CategoryFilter[] = ['All', ...CATEGORY_ORDER];
+const AREA_FILTERS: AreaFilter[] = ['All', ...AREA_ORDER];
 
 export default function AdminScreen() {
   const profile = useAuthStore((state) => state.profile);
@@ -31,6 +34,7 @@ export default function AdminScreen() {
 
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('All');
+  const [areaFilter, setAreaFilter] = useState<AreaFilter>('All');
   const [search, setSearch] = useState('');
   const [oldestFirst, setOldestFirst] = useState(false);
 
@@ -75,6 +79,10 @@ export default function AdminScreen() {
       result = result.filter((report) => report.category === categoryFilter);
     }
 
+    if (areaFilter !== 'All') {
+      result = result.filter((report) => report.area === areaFilter);
+    }
+
     const searchTerm = search.trim().toLowerCase();
     if (searchTerm) {
       result = result.filter((report) => {
@@ -89,7 +97,7 @@ export default function AdminScreen() {
     // Base query is already newest-first; reverse for the oldest-first toggle
     // instead of re-querying.
     return oldestFirst ? [...result].reverse() : result;
-  }, [reports, statusFilter, categoryFilter, search, oldestFirst]);
+  }, [reports, statusFilter, categoryFilter, areaFilter, search, oldestFirst]);
 
   if (!isAdmin) {
     return (
@@ -135,6 +143,17 @@ export default function AdminScreen() {
           </View>
         </View>
 
+        <View className="mb-3">
+          <Text className="mb-1 text-xs font-medium text-gray-700">Area</Text>
+          <SelectField
+            sheetTitle="Filter by area"
+            options={AREA_FILTERS}
+            value={areaFilter}
+            onSelect={setAreaFilter}
+            placeholder="All"
+          />
+        </View>
+
         <View className="mb-3 flex-row items-center rounded-lg border border-gray-200 px-3">
           <IconSymbol name="magnifyingglass" size={16} color="#9CA3AF" />
           <TextInput
@@ -176,7 +195,7 @@ export default function AdminScreen() {
             No reports match your filters
           </Text>
           <Text className="text-center text-sm text-gray-500">
-            Try a different status, category, or search term.
+            Try a different status, category, area, or search term.
           </Text>
         </View>
       ) : (

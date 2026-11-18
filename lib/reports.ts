@@ -1,7 +1,7 @@
 import { deleteDoc, doc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 
 import { reportsCollection } from '@/lib/firestore';
-import type { Category, Status } from '@/types/models';
+import type { Area, Category, Status } from '@/types/models';
 
 export type NewReportInput = {
   userId: string;
@@ -11,6 +11,7 @@ export type NewReportInput = {
   imageUrl: string | null;
   location: { lat: number; lng: number } | null;
   address: string | null;
+  area: Area;
 };
 
 export async function createReport(input: NewReportInput): Promise<string> {
@@ -29,6 +30,7 @@ export async function createReport(input: NewReportInput): Promise<string> {
     imageUrl: input.imageUrl,
     location: input.location,
     address: input.address,
+    area: input.area,
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     adminNotes: null,

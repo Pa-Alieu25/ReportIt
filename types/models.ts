@@ -13,6 +13,18 @@ export type Category =
   | 'Public Facility'
   | 'Other';
 
+// The Gambia's eight local government areas, labelled with the region or
+// municipality people actually use day to day.
+export type Area =
+  | 'Banjul City'
+  | 'Kanifing Municipal'
+  | 'West Coast (Brikama)'
+  | 'North Bank (Kerewan)'
+  | 'Lower River (Mansakonko)'
+  | 'Central River North (Kuntaur)'
+  | 'Central River South (Janjanbureh)'
+  | 'Upper River (Basse)';
+
 export type Role = 'citizen' | 'admin';
 
 export interface User {
@@ -33,6 +45,8 @@ export interface Report {
   imageUrl: string | null;
   location: { lat: number; lng: number } | null;
   address: string | null;
+  // null on reports filed before areas were introduced.
+  area: Area | null;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   adminNotes: string | null;
