@@ -1,8 +1,8 @@
 const CLOUD_NAME = process.env.EXPO_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const UPLOAD_PRESET = process.env.EXPO_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-// Uploads go through an unsigned preset. Size, format and dimension limits
-// are enforced by the preset itself in the Cloudinary console; the folder
+// Uploads go through an unsigned preset. Allowed formats and a maximum
+// image size are enforced by the preset itself in the Cloudinary console; the folder
 // groups each user's photos so they can be audited or removed together.
 export async function uploadImageToCloudinary(localUri: string, userId: string): Promise<string> {
   if (!CLOUD_NAME || !UPLOAD_PRESET) {
@@ -37,8 +37,8 @@ export async function uploadImageToCloudinary(localUri: string, userId: string):
     const body = await response.text().catch(() => '');
     console.error('Cloudinary upload failed:', response.status, body);
     if (response.status === 400) {
-      // The preset rejects files that are too large or not an allowed image type.
-      throw new Error('This photo could not be accepted. Please use a JPG or PNG image under 5 MB.');
+      // The preset rejects file types it doesn't allow (and Cloudinary rejects oversized files).
+      throw new Error('This photo could not be accepted. Please use a JPG or PNG photo and try again.');
     }
     throw new Error('Failed to upload photo. Please try again.');
   }
