@@ -28,10 +28,12 @@ service cloud.firestore {
       // A user can read only their own profile document; admins can read any profile.
       allow read: if isOwner(uid) || isAdmin();
 
-      // A user can create/update only their own profile document.
-      // (Role escalation should be handled server-side / via console, not client writes;
-      // this app does not currently restrict which fields a user may change on their own doc.)
-      allow write: if isOwner(uid);
+      // A user can create only their own profile, and only as a citizen.
+      allow create: if isOwner(uid) && request.resource.data.role == 'citizen';
+
+      // A user can update their own profile but never change their role —
+      // admins are promoted by editing the document in the Firebase console.
+      allow update: if isOwner(uid) && request.resource.data.role == resource.data.role;
     }
 
     match /reports/{reportId} {
