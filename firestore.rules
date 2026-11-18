@@ -1,8 +1,7 @@
 rules_version = '2';
 
-// NOTE: These rules must be published manually in the Firebase console
-// (Firestore Database > Rules) to replace the default test-mode rules.
-// This file is the source of truth for review; it is not auto-deployed.
+// This file is the source of truth for the live rules. Deploy it (and
+// firestore.indexes.json) with: firebase deploy --only firestore
 
 service cloud.firestore {
   match /databases/{database}/documents {
