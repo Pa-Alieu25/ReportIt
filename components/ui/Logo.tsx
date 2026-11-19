@@ -1,35 +1,36 @@
 import { View } from 'react-native';
-import Svg, { Circle, Path } from 'react-native-svg';
+import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { Text } from '@/components/ui/Text';
 import { colors } from '@/theme';
 
+const TEAL = colors.brand.teal600;
+const WHITE = colors.text.inverse;
+
 type LogoMarkProps = {
   size?: number;
-  /** Pin colour. White on dark green, brand green on light surfaces. */
-  color?: string;
-  /** Fill inside the pin, behind the check mark. */
-  innerColor?: string;
+  /** Draw the teal rounded-square app-icon background. */
+  withBackground?: boolean;
 };
 
-// ReportIT logo mark: a location pin with an orange check mark inside,
-// recreated from the poster. 48x48 viewBox.
-export function LogoMark({
-  size = 48,
-  color = colors.text.inverse,
-  innerColor = colors.brand.green800,
-}: LogoMarkProps) {
+// ReportIT logo mark, traced from assets/icon.png (1024 grid): a white ring
+// opened at the bottom by a teal location pin, with an orange check mark in
+// a white circle at the pin's head.
+export function LogoMark({ size = 48, withBackground = true }: LogoMarkProps) {
   return (
-    <Svg width={size} height={size} viewBox="0 0 48 48" accessible={false}>
+    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessible={false}>
+      {withBackground ? <Rect width={1024} height={1024} rx={230} fill={TEAL} /> : null}
+      <Circle cx={512} cy={468} r={300} fill={WHITE} />
       <Path
-        d="M24 3C14.6 3 7 10.4 7 19.6c0 11.8 13.9 23.4 15.7 24.9a2 2 0 0 0 2.6 0C27.1 43 41 31.4 41 19.6 41 10.4 33.4 3 24 3Z"
-        fill={color}
+        d="M512 250C401 250 310 338 310 452c0 110 82 222 160 316h82c78-94 160-206 160-316 0-114-91-202-202-202Z"
+        fill={TEAL}
       />
-      <Circle cx={24} cy={19.5} r={10.5} fill={innerColor} />
+      <Path d="M470 768h82l-40 60Z" fill={TEAL} />
+      <Circle cx={512} cy={440} r={112} fill={WHITE} />
       <Path
-        d="m18.8 19.8 3.6 3.6 7-7.4"
+        d="M461 439l34 40 71-82"
         stroke={colors.brand.orange500}
-        strokeWidth={3.2}
+        strokeWidth={36}
         strokeLinecap="round"
         strokeLinejoin="round"
         fill="none"
@@ -44,39 +45,28 @@ type LogoProps = {
   size?: number;
 };
 
-// Mark + "ReportIT" wordmark, with "IT" in teal as on the poster.
+// App-icon mark + "ReportIT" wordmark, with "IT" in teal as on the poster.
 export function Logo({ tone = 'light', size = 32 }: LogoProps) {
   const onDark = tone === 'dark';
+  const wordStyle = { fontSize: size * 0.62, lineHeight: size * 0.85 };
   return (
     <View
       className="flex-row items-center"
       accessible
       accessibilityRole="image"
       accessibilityLabel="ReportIT">
-      <View
-        className="items-center justify-center rounded-md"
-        style={{
-          width: size,
-          height: size,
-          backgroundColor: colors.brand.teal600,
-        }}>
-        <LogoMark size={size * 0.78} innerColor={colors.brand.teal600} />
-      </View>
+      <LogoMark size={size} />
       <Text
         variant="h2"
         color={onDark ? 'inverse' : 'primary'}
         weight="semibold"
         className="ml-2"
-        style={{ fontSize: size * 0.62, lineHeight: size * 0.85 }}>
+        style={wordStyle}>
         Report
         <Text
           variant="h2"
           weight="semibold"
-          style={{
-            fontSize: size * 0.62,
-            lineHeight: size * 0.85,
-            color: onDark ? colors.brand.teal300 : colors.brand.teal600,
-          }}>
+          style={[wordStyle, { color: onDark ? colors.brand.teal300 : colors.brand.teal600 }]}>
           IT
         </Text>
       </Text>
