@@ -39,13 +39,8 @@ export default function AdminScreen() {
   const [oldestFirst, setOldestFirst] = useState(false);
 
   useEffect(() => {
-    if (!isAdmin) {
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
+    // Non-admins get the access-denied view below, which ignores `loading`.
+    if (!isAdmin) return;
 
     // Sort-only order (no filters at the query level) needs no composite
     // index; all status/category/search filtering happens client-side
@@ -56,6 +51,7 @@ export default function AdminScreen() {
       reportsQuery,
       (snapshot) => {
         setReports(snapshot.docs.map((doc) => doc.data()));
+        setError(null);
         setLoading(false);
       },
       (err) => {

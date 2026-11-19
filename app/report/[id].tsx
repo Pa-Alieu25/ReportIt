@@ -137,10 +137,9 @@ export default function ReportDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Admin edit draft. Seeded once from the first snapshot, then left alone —
-  // the live listener must not clobber an admin's in-progress edit if the
-  // doc changes elsewhere while they're mid-edit.
-  const [draftInitialized, setDraftInitialized] = useState(false);
+  // Admin edit draft. Seeded once from the first snapshot (see the listener
+  // below), then left alone — the live listener must not clobber an admin's
+  // in-progress edit if the doc changes elsewhere while they're mid-edit.
   const [selectedStatus, setSelectedStatus] = useState<Status | null>(null);
   const [notesDraft, setNotesDraft] = useState('');
   const [saving, setSaving] = useState(false);
@@ -148,14 +147,6 @@ export default function ReportDetailScreen() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (report && !draftInitialized) {
-      setSelectedStatus(report.status);
-      setNotesDraft(report.adminNotes ?? '');
-      setDraftInitialized(true);
-    }
-  }, [report, draftInitialized]);
 
   const handleSave = async () => {
     if (!report || !selectedStatus) return;
@@ -219,15 +210,20 @@ export default function ReportDetailScreen() {
   useEffect(() => {
     if (!id) return;
 
-    setLoading(true);
-    setError(null);
-
+    let draftSeeded = false;
     const ref = doc(reportsCollection, id);
 
     const unsubscribe = onSnapshot(
       ref,
       (snapshot) => {
-        setReport(snapshot.exists() ? snapshot.data() : null);
+        const data = snapshot.exists() ? snapshot.data() : null;
+        setReport(data);
+        if (data && !draftSeeded) {
+          setSelectedStatus(data.status);
+          setNotesDraft(data.adminNotes ?? '');
+          draftSeeded = true;
+        }
+        setError(null);
         setLoading(false);
       },
       (err) => {

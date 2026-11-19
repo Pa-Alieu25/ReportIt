@@ -145,13 +145,11 @@ export default function MapScreen() {
   const [mapReady, setMapReady] = useState(false);
 
   useEffect(() => {
-    setLoading(true);
-    setError(null);
-
     const unsubscribe = onSnapshot(
       reportsCollection,
       (snapshot) => {
         setReports(snapshot.docs.map((doc) => doc.data()));
+        setError(null);
         setLoading(false);
       },
       (err) => {
