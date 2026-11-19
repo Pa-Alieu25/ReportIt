@@ -1,3 +1,5 @@
+const { colors, fontFamily, radius } = require('./theme/tokens');
+
 /** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
@@ -6,30 +8,51 @@ module.exports = {
     './constants/**/*.{js,jsx,ts,tsx}',
     './lib/**/*.{js,jsx,ts,tsx}',
     './store/**/*.{js,jsx,ts,tsx}',
+    './theme/**/*.{js,jsx,ts,tsx}',
   ],
   presets: [require('nativewind/preset')],
   theme: {
     extend: {
       colors: {
+        brand: colors.brand,
+        surface: colors.surface,
+        ink: colors.text,
+        line: colors.border,
+
+        // Legacy names still used by screens not yet redesigned (Stage 2),
+        // pointed at the brand tokens so they already match.
         primary: {
-          DEFAULT: '#0F766E',
-          dark: '#115E59',
-          light: '#14B8A6',
+          DEFAULT: colors.brand.teal600,
+          dark: colors.brand.teal700,
+          light: colors.brand.teal500,
         },
         accent: {
-          DEFAULT: '#F59E0B',
-          dark: '#D97706',
+          DEFAULT: colors.brand.orange500,
+          dark: colors.feedback.warning.fg,
         },
-        error: '#DC2626',
+        error: colors.feedback.error.fg,
         status: {
-          pending: '#F59E0B',
-          underReview: '#3B82F6',
-          inProgress: '#6366F1',
-          resolved: '#16A34A',
-          rejected: '#DC2626',
+          pending: colors.status.Pending.solid,
+          underReview: colors.status['Under Review'].solid,
+          inProgress: colors.status['In Progress'].solid,
+          resolved: colors.status.Resolved.solid,
+          rejected: colors.status.Rejected.solid,
         },
+      },
+      fontFamily: {
+        regular: [fontFamily.regular],
+        medium: [fontFamily.medium],
+        semibold: [fontFamily.semibold],
+        bold: [fontFamily.bold],
+      },
+      borderRadius: {
+        sm: `${radius.sm}px`,
+        md: `${radius.md}px`,
+        lg: `${radius.lg}px`,
+        xl: `${radius.xl}px`,
+        '2xl': `${radius['2xl']}px`,
       },
     },
   },
   plugins: [],
-}
+};
