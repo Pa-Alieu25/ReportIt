@@ -1,4 +1,5 @@
 import * as ImagePicker from 'expo-image-picker';
+import { useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import {
   ActivityIndicator,
@@ -14,7 +15,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Icon } from '@/components/ui/Icon';
 import { Select } from '@/components/ui/Select';
 import { AREA_ORDER } from '@/constants/area';
-import { CATEGORY_ORDER } from '@/constants/category';
+import { CATEGORY_ORDER, isCategory } from '@/constants/category';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
 import { getCurrentLocation, reverseGeocode, type Coordinates } from '@/lib/location';
 import { createReport } from '@/lib/reports';
@@ -37,6 +38,16 @@ export default function ReportScreen() {
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
 
+  // Home's "Popular issues" tiles open this tab with ?category=…&nonce=….
+  // The nonce makes a repeat tap on the same tile apply again, even after
+  // the user changed the category by hand. Adjusting state during render
+  // (rather than in an effect) avoids a flash of the old value.
+  const params = useLocalSearchParams<{ category?: string; nonce?: string }>();
+  const [appliedNonce, setAppliedNonce] = useState<string | undefined>(undefined);
+  if (params.nonce && params.nonce !== appliedNonce) {
+    setAppliedNonce(params.nonce);
+    if (isCategory(params.category)) setCategory(params.category);
+  }
   const [area, setArea] = useState<Area | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
