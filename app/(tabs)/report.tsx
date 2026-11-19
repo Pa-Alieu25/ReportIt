@@ -1,5 +1,3 @@
-import { SelectField } from '@/components/SelectField';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import {
@@ -13,6 +11,8 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { Icon } from '@/components/ui/Icon';
+import { Select } from '@/components/ui/Select';
 import { AREA_ORDER } from '@/constants/area';
 import { CATEGORY_ORDER } from '@/constants/category';
 import { uploadImageToCloudinary } from '@/lib/cloudinary';
@@ -20,6 +20,7 @@ import { getCurrentLocation, reverseGeocode, type Coordinates } from '@/lib/loca
 import { createReport } from '@/lib/reports';
 import { isNonEmpty } from '@/lib/validation';
 import { useAuthStore } from '@/store/useAuthStore';
+import { colors } from '@/theme';
 import type { Area, Category } from '@/types/models';
 
 type FormErrors = {
@@ -35,6 +36,7 @@ export default function ReportScreen() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [category, setCategory] = useState<Category | null>(null);
+
   const [area, setArea] = useState<Area | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
 
@@ -208,7 +210,7 @@ export default function ReportScreen() {
           onChangeText={setTitle}
           maxLength={120}
           placeholder="Short summary, e.g. Pothole on Kairaba Avenue"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.text.placeholder}
           className="mb-1 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
         />
         {errors.title ? (
@@ -223,7 +225,7 @@ export default function ReportScreen() {
           onChangeText={setDescription}
           maxLength={2000}
           placeholder="Describe the issue in detail"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.text.placeholder}
           multiline
           numberOfLines={5}
           textAlignVertical="top"
@@ -236,7 +238,7 @@ export default function ReportScreen() {
         )}
 
         <Text className="mb-1 text-sm font-medium text-gray-700">Category</Text>
-        <SelectField
+        <Select
           sheetTitle="Select a category"
           options={CATEGORY_ORDER}
           value={category}
@@ -251,7 +253,7 @@ export default function ReportScreen() {
         )}
 
         <Text className="mb-1 text-sm font-medium text-gray-700">Area</Text>
-        <SelectField
+        <Select
           sheetTitle="Which area is this in?"
           options={AREA_ORDER}
           value={area}
@@ -317,7 +319,7 @@ export default function ReportScreen() {
 
         {locationCoords ? (
           <View className="mb-1 flex-row items-center rounded-lg border border-gray-200 px-4 py-3">
-            <IconSymbol name="mappin.circle.fill" size={20} color="#0F766E" />
+            <Icon name="pin" size={20} color={colors.brand.teal600} />
             <Text className="ml-2 flex-1 text-base text-gray-900" numberOfLines={2}>
               {locationAddress ?? `${locationCoords.lat.toFixed(5)}, ${locationCoords.lng.toFixed(5)}`}
             </Text>
@@ -335,7 +337,7 @@ export default function ReportScreen() {
               disabled={locating}
               className={`flex-1 items-center rounded-lg border border-primary px-4 py-2.5 ${locating ? 'opacity-60' : ''}`}>
               {locating ? (
-                <ActivityIndicator color="#0F766E" />
+                <ActivityIndicator color={colors.brand.teal600} />
               ) : (
                 <Text className="text-sm font-semibold text-primary">Refresh</Text>
               )}
@@ -354,14 +356,14 @@ export default function ReportScreen() {
             className={`mb-3 flex-row items-center justify-center rounded-lg border border-primary px-4 py-3 ${locating ? 'opacity-60' : ''}`}>
             {locating ? (
               <>
-                <ActivityIndicator color="#0F766E" />
+                <ActivityIndicator color={colors.brand.teal600} />
                 <Text className="ml-2 text-sm font-semibold text-primary">
                   Getting your location...
                 </Text>
               </>
             ) : (
               <>
-                <IconSymbol name="location.fill" size={18} color="#0F766E" />
+                <Icon name="locate" size={18} color={colors.brand.teal600} />
                 <Text className="ml-2 text-sm font-semibold text-primary">
                   Use my current location
                 </Text>

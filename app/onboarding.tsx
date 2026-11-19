@@ -2,23 +2,24 @@ import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { IconSymbol, type IconSymbolName } from '@/components/ui/icon-symbol';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { setOnboardingComplete } from '@/lib/onboarding';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
+import { colors } from '@/theme';
 
-const SLIDES: { icon: IconSymbolName; title: string; body: string }[] = [
+const SLIDES: { icon: IconName; title: string; body: string }[] = [
   {
-    icon: 'exclamationmark.bubble.fill',
+    icon: 'warning',
     title: 'Report issues in your community',
     body: 'See a pothole, a flooded road, or illegal dumping in your area? Report it in seconds.',
   },
   {
-    icon: 'location.fill',
+    icon: 'locate',
     title: 'Add a photo and location',
     body: 'Attach a picture and pin the exact spot so it gets fixed faster.',
   },
   {
-    icon: 'list.bullet.clipboard.fill',
+    icon: 'my-reports',
     title: 'Track the status',
     body: 'Follow your report from Pending all the way to Resolved.',
   },
@@ -52,7 +53,7 @@ export default function OnboardingScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 items-center justify-center px-8">
         <View className="mb-8 h-24 w-24 items-center justify-center rounded-full bg-primary/10">
-          <IconSymbol name={slide.icon} size={44} color="#0F766E" />
+          <Icon name={slide.icon} size={44} color={colors.brand.teal600} />
         </View>
         <Text className="mb-3 text-center text-2xl font-bold text-gray-900">{slide.title}</Text>
         <Text className="text-center text-base text-gray-500">{slide.body}</Text>

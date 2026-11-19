@@ -14,13 +14,14 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import WebView from 'react-native-webview';
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Icon } from '@/components/ui/Icon';
 import { ALL_STATUSES, getStatusStyle, STAGE_DOT_CLASS, STATUS_ORDER } from '@/constants/status';
 import { reportsCollection } from '@/lib/firestore';
 import { formatDate } from '@/lib/format';
 import { deleteReport, updateReportStatus } from '@/lib/reports';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Report, Status } from '@/types/models';
+import { colors } from '@/theme';
 
 // Same Leaflet + OpenStreetMap CDN approach as the main map (app/(tabs)/map.tsx),
 // but static: a single fixed marker with all interaction disabled, since this
@@ -62,7 +63,7 @@ function buildMiniMapHtml(lat: number, lng: number): string {
 
     var icon = L.divIcon({
       className: '',
-      html: '<div style="background:#0F766E;width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 3px rgba(0,0,0,0.5);"></div>',
+      html: '<div style="background:#0F7A69;width:18px;height:18px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 3px rgba(0,0,0,0.5);"></div>',
       iconSize: [18, 18],
       iconAnchor: [9, 9]
     });
@@ -116,7 +117,7 @@ function StatusTimeline({ status }: { status: Report['status'] }) {
 function RejectedState({ reason }: { reason: string | null }) {
   return (
     <View className="flex-row items-start rounded-lg border border-error/30 bg-error/10 p-4">
-      <IconSymbol name="xmark.circle.fill" size={20} color="#DC2626" />
+      <Icon name="error" size={20} color={colors.feedback.error.fg} />
       <View className="ml-3 flex-1">
         <Text className="mb-1 text-sm font-semibold text-error">Rejected</Text>
         <Text className="text-sm text-gray-700">
@@ -248,7 +249,7 @@ export default function ReportDetailScreen() {
   if (loading) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white">
-        <ActivityIndicator size="large" color="#0F766E" />
+        <ActivityIndicator size="large" color={colors.brand.teal600} />
       </SafeAreaView>
     );
   }
@@ -264,7 +265,7 @@ export default function ReportDetailScreen() {
   if (!report) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
-        <IconSymbol name="tray.fill" size={40} color="#9CA3AF" />
+        <Icon name="inbox" size={40} color={colors.text.placeholder} />
         <Text className="mb-1 mt-3 text-center text-base font-semibold text-gray-900">
           Report not found
         </Text>
@@ -287,7 +288,7 @@ export default function ReportDetailScreen() {
           <Image source={{ uri: report.imageUrl }} className="h-56 w-full" resizeMode="cover" />
         ) : (
           <View className="h-56 w-full items-center justify-center bg-gray-100">
-            <IconSymbol name="photo.fill" size={40} color="#9CA3AF" />
+            <Icon name="photo" size={40} color={colors.text.placeholder} />
           </View>
         )}
 
@@ -340,7 +341,7 @@ export default function ReportDetailScreen() {
           {isAdmin ? (
             <View className="mb-6 rounded-lg border border-accent/30 bg-accent/5 p-4">
               <View className="mb-3 flex-row items-center">
-                <IconSymbol name="shield.fill" size={16} color="#D97706" />
+                <Icon name="admin" size={16} color={colors.feedback.warning.fg} />
                 <Text className="ml-2 text-sm font-semibold text-accent-dark">Admin Controls</Text>
               </View>
 
@@ -377,7 +378,7 @@ export default function ReportDetailScreen() {
                 }}
                 placeholder="Add notes visible to the reporter"
                 maxLength={2000}
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.text.placeholder}
                 multiline
                 numberOfLines={4}
                 textAlignVertical="top"
@@ -408,10 +409,10 @@ export default function ReportDetailScreen() {
                     deleting ? 'opacity-60' : ''
                   }`}>
                   {deleting ? (
-                    <ActivityIndicator color="#DC2626" />
+                    <ActivityIndicator color={colors.feedback.error.fg} />
                   ) : (
                     <>
-                      <IconSymbol name="trash.fill" size={16} color="#DC2626" />
+                      <Icon name="delete" size={16} color={colors.feedback.error.fg} />
                       <Text className="ml-2 text-base font-semibold text-error">Delete report</Text>
                     </>
                   )}

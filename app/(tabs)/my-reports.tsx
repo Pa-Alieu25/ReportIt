@@ -3,9 +3,9 @@ import { ActivityIndicator, FlatList, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ReportCard } from '@/components/ReportCard';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Palette } from '@/constants/colors';
+import { Icon } from '@/components/ui/Icon';
 import { useMyReportsStore } from '@/store/useMyReportsStore';
+import { colors } from '@/theme';
 
 export default function MyReportsScreen() {
   const router = useRouter();
@@ -23,7 +23,7 @@ export default function MyReportsScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={Palette.primary} />
+          <ActivityIndicator size="large" color={colors.brand.teal600} />
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6">
@@ -31,7 +31,7 @@ export default function MyReportsScreen() {
         </View>
       ) : reports.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <IconSymbol name="tray.fill" size={40} color="#9CA3AF" />
+          <Icon name="inbox" size={40} color={colors.text.placeholder} />
           <Text className="mb-1 mt-3 text-center text-base font-semibold text-gray-900">
             You haven&apos;t reported any issues yet
           </Text>

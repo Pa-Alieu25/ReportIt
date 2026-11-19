@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { signIn } from '@/lib/auth';
 import { isValidEmail } from '@/lib/validation';
+import { colors } from '@/theme';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -58,7 +59,7 @@ export default function LoginScreen() {
           keyboardType="email-address"
           autoComplete="email"
           placeholder="you@example.com"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.text.placeholder}
           className="mb-4 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
         />
 
@@ -69,7 +70,7 @@ export default function LoginScreen() {
           secureTextEntry
           autoComplete="password"
           placeholder="••••••••"
-          placeholderTextColor="#9CA3AF"
+          placeholderTextColor={colors.text.placeholder}
           className="mb-6 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
         />
 

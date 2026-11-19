@@ -1,42 +1,42 @@
-import {
-  ArrowUpDown,
-  Bell,
-  Building,
-  Camera,
-  ChevronRight,
-  CircleCheck,
-  CircleExclamationPoint,
-  ClipboardList,
-  Clock,
-  CloudRain,
-  Droplet,
-  Ellipsis,
-  Eye,
-  EyeOff,
-  House,
-  Image,
-  Inbox,
-  Info,
-  Lightbulb,
-  LocateFixed,
-  LogOut,
-  Map,
-  MapPin,
-  Plus,
-  Search,
-  ShieldCheck,
-  ShieldX,
-  TrafficCone,
-  Trash,
-  TriangleExclamationPoint,
-  User,
-  Users,
-  WavesHorizontal,
-  WifiOff,
-  X,
-  Zap,
-  type LucideIcon,
-} from 'lucide-react-native';
+// Per-icon imports: Metro doesn't tree-shake, so importing from the package
+// root would bundle all ~4,800 Lucide icons.
+import ArrowUpDown from 'lucide-react-native/icons/arrow-up-down';
+import Bell from 'lucide-react-native/icons/bell';
+import Building from 'lucide-react-native/icons/building';
+import Camera from 'lucide-react-native/icons/camera';
+import ChevronRight from 'lucide-react-native/icons/chevron-right';
+import CircleCheck from 'lucide-react-native/icons/circle-check';
+import CircleExclamationPoint from 'lucide-react-native/icons/circle-exclamation-point';
+import ClipboardList from 'lucide-react-native/icons/clipboard-list';
+import Clock from 'lucide-react-native/icons/clock';
+import CloudRain from 'lucide-react-native/icons/cloud-rain';
+import Droplet from 'lucide-react-native/icons/droplet';
+import Ellipsis from 'lucide-react-native/icons/ellipsis';
+import Eye from 'lucide-react-native/icons/eye';
+import EyeOff from 'lucide-react-native/icons/eye-off';
+import House from 'lucide-react-native/icons/house';
+import ImageIcon from 'lucide-react-native/icons/image';
+import Inbox from 'lucide-react-native/icons/inbox';
+import Info from 'lucide-react-native/icons/info';
+import Lightbulb from 'lucide-react-native/icons/lightbulb';
+import LocateFixed from 'lucide-react-native/icons/locate-fixed';
+import LogOut from 'lucide-react-native/icons/log-out';
+import MapIcon from 'lucide-react-native/icons/map';
+import MapPin from 'lucide-react-native/icons/map-pin';
+import Plus from 'lucide-react-native/icons/plus';
+import Search from 'lucide-react-native/icons/search';
+import ShieldCheck from 'lucide-react-native/icons/shield-check';
+import ShieldX from 'lucide-react-native/icons/shield-x';
+import TrafficCone from 'lucide-react-native/icons/traffic-cone';
+import Trash from 'lucide-react-native/icons/trash';
+import TriangleExclamationPoint from 'lucide-react-native/icons/triangle-exclamation-point';
+import User from 'lucide-react-native/icons/user';
+import Users from 'lucide-react-native/icons/users';
+import WavesHorizontal from 'lucide-react-native/icons/waves-horizontal';
+import WifiOff from 'lucide-react-native/icons/wifi-off';
+import X from 'lucide-react-native/icons/x';
+import Zap from 'lucide-react-native/icons/zap';
+import type { LucideIcon } from 'lucide-react-native';
 
 import { colors } from '@/theme';
 
@@ -45,7 +45,7 @@ import { colors } from '@/theme';
 // be swapped or extended in one place.
 const ICONS = {
   home: House,
-  map: Map,
+  map: MapIcon,
   plus: Plus,
   bell: Bell,
   user: User,
@@ -56,7 +56,7 @@ const ICONS = {
   pin: MapPin,
   locate: LocateFixed,
   camera: Camera,
-  photo: Image,
+  photo: ImageIcon,
   'chevron-right': ChevronRight,
   search: Search,
   sort: ArrowUpDown,

@@ -1,8 +1,14 @@
-import { Image, Pressable, Text, View } from 'react-native';
+import { Image } from 'expo-image';
+import { PixelRatio, View } from 'react-native';
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { getStatusStyle } from '@/constants/status';
+import { Card } from '@/components/ui/Card';
+import { Icon } from '@/components/ui/Icon';
+import { StatusBadge } from '@/components/ui/StatusBadge';
+import { Text } from '@/components/ui/Text';
+import { CATEGORY_META } from '@/constants/category';
 import { formatDate } from '@/lib/format';
+import { cloudinaryResized } from '@/lib/images';
+import { colors, radius } from '@/theme';
 import type { Report } from '@/types/models';
 
 type ReportCardProps = {
@@ -10,46 +16,58 @@ type ReportCardProps = {
   onPress?: () => void;
 };
 
+const THUMB = 72;
+
 export function ReportCard({ report, onPress }: ReportCardProps) {
-  const statusStyle = getStatusStyle(report.status);
+  const meta = CATEGORY_META[report.category] ?? CATEGORY_META.Other;
+  const thumbPx = Math.round(THUMB * PixelRatio.get());
+  const place = report.area ?? report.address ?? 'No location';
 
   return (
-    <Pressable onPress={onPress} className="mb-3 flex-row rounded-lg border border-gray-200 p-3">
-      {report.imageUrl ? (
-        <Image
-          source={{ uri: report.imageUrl }}
-          className="mr-3 h-16 w-16 rounded-lg"
-          resizeMode="cover"
-        />
-      ) : (
-        <View className="mr-3 h-16 w-16 items-center justify-center rounded-lg bg-gray-100">
-          <IconSymbol name="photo.fill" size={24} color="#9CA3AF" />
-        </View>
-      )}
+    <Card
+      onPress={onPress}
+      padding={12}
+      className="mb-3"
+      accessibilityLabel={`${report.title}. ${report.category}, ${place}. Status ${report.status}. Reported ${formatDate(report.createdAt)}.`}>
+      <View className="flex-row">
+        {report.imageUrl ? (
+          <Image
+            source={{ uri: cloudinaryResized(report.imageUrl, thumbPx, thumbPx) }}
+            style={{ width: THUMB, height: THUMB, borderRadius: radius.md }}
+            contentFit="cover"
+            cachePolicy="memory-disk"
+            transition={150}
+            accessible={false}
+          />
+        ) : (
+          <View
+            className="items-center justify-center"
+            style={{ width: THUMB, height: THUMB, borderRadius: radius.md, backgroundColor: `${meta.tint}1F` }}>
+            <Icon name={meta.icon} size={28} color={meta.tint} />
+          </View>
+        )}
 
-      <View className="flex-1">
-        <View className="mb-1 flex-row items-start justify-between gap-2">
-          <Text className="flex-1 text-base font-semibold text-gray-900" numberOfLines={1}>
+        <View className="ml-3 flex-1">
+          <Text variant="bodyStrong" weight="semibold" numberOfLines={2}>
             {report.title}
           </Text>
-          <View className={`rounded-full px-2 py-0.5 ${statusStyle.bg}`}>
-            <Text className={`text-xs font-medium ${statusStyle.text}`}>{report.status}</Text>
+          <Text variant="caption" color="muted" numberOfLines={1} className="mt-0.5">
+            {report.category}
+          </Text>
+          <View className="mt-1 flex-row items-center">
+            <Icon name="pin" size={13} color={colors.text.muted} />
+            <Text variant="caption" color="muted" numberOfLines={1} className="ml-1 flex-1">
+              {place}
+            </Text>
+          </View>
+          <View className="mt-2 flex-row items-center justify-between">
+            <StatusBadge status={report.status} />
+            <Text variant="caption" color="muted">
+              {formatDate(report.createdAt)}
+            </Text>
           </View>
         </View>
-
-        <Text className="mb-1 text-sm text-gray-500" numberOfLines={1}>
-          {report.area ? `${report.category} · ${report.area}` : report.category}
-        </Text>
-
-        <View className="mb-1 flex-row items-center">
-          <IconSymbol name="mappin.circle.fill" size={14} color="#9CA3AF" />
-          <Text className="ml-1 flex-1 text-sm text-gray-500" numberOfLines={1}>
-            {report.address ?? 'No location'}
-          </Text>
-        </View>
-
-        <Text className="text-xs text-gray-400">{formatDate(report.createdAt)}</Text>
       </View>
-    </Pressable>
+    </Card>
   );
 }

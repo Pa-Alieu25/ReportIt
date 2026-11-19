@@ -5,15 +5,15 @@ import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'r
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ReportCard } from '@/components/ReportCard';
-import { SelectField } from '@/components/SelectField';
-import { IconSymbol } from '@/components/ui/icon-symbol';
+import { Select } from '@/components/ui/Select';
+import { Icon } from '@/components/ui/Icon';
 import { AREA_ORDER } from '@/constants/area';
 import { CATEGORY_ORDER } from '@/constants/category';
-import { Palette } from '@/constants/colors';
 import { ALL_STATUSES } from '@/constants/status';
 import { reportsCollection } from '@/lib/firestore';
 import { useAuthStore } from '@/store/useAuthStore';
 import type { Area, Category, Report, Status } from '@/types/models';
+import { colors } from '@/theme';
 
 type StatusFilter = Status | 'All';
 type CategoryFilter = Category | 'All';
@@ -98,7 +98,7 @@ export default function AdminScreen() {
   if (!isAdmin) {
     return (
       <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
-        <IconSymbol name="xmark.shield.fill" size={40} color="#9CA3AF" />
+        <Icon name="access-denied" size={40} color={colors.text.placeholder} />
         <Text className="mb-1 mt-3 text-center text-base font-semibold text-gray-900">
           Access denied
         </Text>
@@ -119,7 +119,7 @@ export default function AdminScreen() {
         <View className="mb-3 flex-row gap-3">
           <View className="flex-1">
             <Text className="mb-1 text-xs font-medium text-gray-700">Status</Text>
-            <SelectField
+            <Select
               sheetTitle="Filter by status"
               options={STATUS_FILTERS}
               value={statusFilter}
@@ -129,7 +129,7 @@ export default function AdminScreen() {
           </View>
           <View className="flex-1">
             <Text className="mb-1 text-xs font-medium text-gray-700">Category</Text>
-            <SelectField
+            <Select
               sheetTitle="Filter by category"
               options={CATEGORY_FILTERS}
               value={categoryFilter}
@@ -141,7 +141,7 @@ export default function AdminScreen() {
 
         <View className="mb-3">
           <Text className="mb-1 text-xs font-medium text-gray-700">Area</Text>
-          <SelectField
+          <Select
             sheetTitle="Filter by area"
             options={AREA_FILTERS}
             value={areaFilter}
@@ -151,12 +151,12 @@ export default function AdminScreen() {
         </View>
 
         <View className="mb-3 flex-row items-center rounded-lg border border-gray-200 px-3">
-          <IconSymbol name="magnifyingglass" size={16} color="#9CA3AF" />
+          <Icon name="search" size={16} color={colors.text.placeholder} />
           <TextInput
             value={search}
             onChangeText={setSearch}
             placeholder="Search title, description, or address"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor={colors.text.placeholder}
             className="ml-2 flex-1 py-2.5 text-sm text-gray-900"
           />
         </View>
@@ -168,7 +168,7 @@ export default function AdminScreen() {
           <Pressable
             onPress={() => setOldestFirst((value) => !value)}
             className="flex-row items-center">
-            <IconSymbol name="arrow.up.arrow.down" size={14} color="#0F766E" />
+            <Icon name="sort" size={14} color={colors.brand.teal600} />
             <Text className="ml-1 text-xs font-medium text-primary">
               {oldestFirst ? 'Oldest first' : 'Newest first'}
             </Text>
@@ -178,7 +178,7 @@ export default function AdminScreen() {
 
       {loading ? (
         <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={Palette.primary} />
+          <ActivityIndicator size="large" color={colors.brand.teal600} />
         </View>
       ) : error ? (
         <View className="flex-1 items-center justify-center px-6">
@@ -186,7 +186,7 @@ export default function AdminScreen() {
         </View>
       ) : filteredReports.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
-          <IconSymbol name="tray.fill" size={40} color="#9CA3AF" />
+          <Icon name="inbox" size={40} color={colors.text.placeholder} />
           <Text className="mb-1 mt-3 text-center text-base font-semibold text-gray-900">
             No reports match your filters
           </Text>

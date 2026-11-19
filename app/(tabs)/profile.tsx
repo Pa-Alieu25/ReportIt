@@ -2,8 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Palette } from '@/constants/colors';
+import { Icon } from '@/components/ui/Icon';
 import { signOutUser } from '@/lib/auth';
 import { formatDate } from '@/lib/format';
 import {
@@ -13,6 +12,7 @@ import {
 import { useAuthStore } from '@/store/useAuthStore';
 import { useMyReportsStore } from '@/store/useMyReportsStore';
 import { useNotificationPreferenceStore } from '@/store/useNotificationPreferenceStore';
+import { colors } from '@/theme';
 
 export default function ProfileScreen() {
   const user = useAuthStore((state) => state.user);
@@ -66,7 +66,7 @@ export default function ProfileScreen() {
 
         <View className="mb-6 items-center">
           <View className="mb-3 h-20 w-20 items-center justify-center rounded-full bg-primary/10">
-            <IconSymbol name="person.fill" size={36} color="#0F766E" />
+            <Icon name="user" size={36} color={colors.brand.teal600} />
           </View>
           <Text className="text-lg font-semibold text-gray-900">{profile?.name ?? 'Unknown'}</Text>
           <Text className="text-sm text-gray-500">{profile?.email ?? user?.email ?? ''}</Text>
@@ -80,7 +80,7 @@ export default function ProfileScreen() {
         <View className="mb-6 flex-row gap-3">
           <View className="flex-1 items-center rounded-lg border border-gray-200 py-4">
             {reportCount === null ? (
-              <ActivityIndicator color={Palette.primary} />
+              <ActivityIndicator color={colors.brand.teal600} />
             ) : (
               <Text className="text-2xl font-bold text-gray-900">{reportCount}</Text>
             )}
@@ -106,8 +106,8 @@ export default function ProfileScreen() {
           <Switch
             value={notificationsEnabled}
             onValueChange={handleToggleNotifications}
-            trackColor={{ false: '#E5E7EB', true: Palette.primaryLight }}
-            thumbColor={notificationsEnabled ? Palette.primary : '#f4f3f4'}
+            trackColor={{ false: colors.border.default, true: colors.brand.teal500 }}
+            thumbColor={notificationsEnabled ? colors.brand.teal600 : colors.surface.card}
           />
         </View>
 
