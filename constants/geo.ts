@@ -1,0 +1,39 @@
+// Geographic constants for The Gambia. Bounds are [[south, west], [north, east]]
+// in Leaflet's [lat, lng] order.
+
+type Bounds = [[number, number], [number, number]];
+
+// The country's extent (about 13.06–13.83°N, 16.83–13.79°W).
+export const GAMBIA_BOUNDS: Bounds = [
+  [13.05, -16.85],
+  [13.84, -13.78],
+];
+
+// How far the map may be panned: the country plus a small margin, so
+// border towns aren't pinned against the screen edge.
+export const GAMBIA_MAX_BOUNDS: Bounds = [
+  [12.9, -17.1],
+  [14.0, -13.6],
+];
+
+// Default view: Banjul, Kanifing (Serekunda, Bakau) and Brikama, where
+// most people live.
+export const GREATER_BANJUL_BOUNDS: Bounds = [
+  [13.24, -16.83],
+  [13.49, -16.56],
+];
+
+// True for points inside The Gambia's bounding box. This is a box, not the
+// border line, so it also accepts parts of Senegal north and south of the
+// river; good enough to drop test data from elsewhere (e.g. Ghana).
+export function isInGambia(lat: number, lng: number): boolean {
+  const [[south, west], [north, east]] = GAMBIA_BOUNDS;
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= south &&
+    lat <= north &&
+    lng >= west &&
+    lng <= east
+  );
+}
