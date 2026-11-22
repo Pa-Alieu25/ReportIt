@@ -1,209 +1,307 @@
 import { useRouter } from 'expo-router';
 import { onSnapshot, orderBy, query } from 'firebase/firestore';
 import { useEffect, useMemo, useState } from 'react';
-import { ActivityIndicator, FlatList, Pressable, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { FlatList, ScrollView, View } from 'react-native';
 
 import { ReportCard } from '@/components/ReportCard';
+import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { IconButton } from '@/components/ui/IconButton';
+import { Input } from '@/components/ui/Input';
+import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { Screen } from '@/components/ui/Screen';
+import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Select } from '@/components/ui/Select';
-import { Icon } from '@/components/ui/Icon';
+import { ReportCardSkeleton, Skeleton } from '@/components/ui/Skeleton';
+import { Text } from '@/components/ui/Text';
+import { toast } from '@/components/ui/Toast';
 import { AREA_ORDER } from '@/constants/area';
 import { CATEGORY_ORDER } from '@/constants/category';
 import { ALL_STATUSES } from '@/constants/status';
 import { reportsCollection } from '@/lib/firestore';
+import { updateReportStatus } from '@/lib/reports';
 import { useAuthStore } from '@/store/useAuthStore';
+import { colors, radius, statusColors } from '@/theme';
 import type { Area, Category, Report, Status } from '@/types/models';
-import { colors } from '@/theme';
 
-type StatusFilter = Status | 'All';
-type CategoryFilter = Category | 'All';
-type AreaFilter = Area | 'All';
+const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
-const STATUS_FILTERS: StatusFilter[] = ['All', ...ALL_STATUSES];
-const CATEGORY_FILTERS: CategoryFilter[] = ['All', ...CATEGORY_ORDER];
-const AREA_FILTERS: AreaFilter[] = ['All', ...AREA_ORDER];
+function SummaryCard({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <Card padding={12} className="flex-1" accessibilityLabel={`${label}: ${value}`}>
+      <Text variant="h1" style={{ color }}>
+        {value}
+      </Text>
+      <Text variant="caption" color="muted" numberOfLines={2}>
+        {label}
+      </Text>
+    </Card>
+  );
+}
+
+// A report card with a one-tap status change underneath. Closing a report
+// (Rejected) needs a reason for the reporter, so that opens the full detail.
+function AdminRow({ report, onOpen }: { report: Report; onOpen: () => void }) {
+  const [saving, setSaving] = useState(false);
+
+  const changeStatus = async (next: Status) => {
+    if (next === report.status) return;
+    if (next === 'Rejected') {
+      onOpen();
+      toast.show('Add a reason for the reporter, then save.', 'info');
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateReportStatus(report.id, next);
+      toast.show(`Marked as ${next}.`);
+    } catch (error) {
+      console.error('Quick status update failed:', error);
+      toast.show("Couldn't update the status. Check your connection.", 'error');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <View className="mb-4">
+      <ReportCard report={report} onPress={onOpen} />
+      <View style={{ marginTop: -6 }}>
+        <Select
+          sheetTitle={`Change status: ${report.title}`}
+          options={ALL_STATUSES}
+          value={report.status}
+          onSelect={changeStatus}
+          placeholder=""
+          renderTrigger={(open) => (
+            <Button
+              label={`Change status · ${report.status}`}
+              icon="refresh"
+              variant="ghost"
+              loading={saving}
+              loadingLabel="Updating…"
+              onPress={open}
+            />
+          )}
+        />
+      </View>
+    </View>
+  );
+}
 
 export default function AdminScreen() {
-  const profile = useAuthStore((state) => state.profile);
-  const isAdmin = profile?.role === 'admin';
   const router = useRouter();
+  const isAdmin = useAuthStore((state) => state.profile?.role === 'admin');
 
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  // When the latest snapshot arrived; "this week" is measured from here.
+  const [loadedAt, setLoadedAt] = useState(0);
 
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('All');
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>('All');
-  const [areaFilter, setAreaFilter] = useState<AreaFilter>('All');
+  const [statusFilter, setStatusFilter] = useState<Status | 'All'>('All');
+  const [categoryFilter, setCategoryFilter] = useState<Category | 'All'>('All');
+  const [areaFilter, setAreaFilter] = useState<Area | 'All'>('All');
   const [search, setSearch] = useState('');
   const [oldestFirst, setOldestFirst] = useState(false);
 
   useEffect(() => {
     // Non-admins get the access-denied view below, which ignores `loading`.
     if (!isAdmin) return;
-
-    // Sort-only order (no filters at the query level) needs no composite
-    // index; all status/category/search filtering happens client-side
-    // below over this one real-time snapshot.
-    const reportsQuery = query(reportsCollection, orderBy('createdAt', 'desc'));
-
+    // Sort-only order needs no composite index; filtering is client-side.
     const unsubscribe = onSnapshot(
-      reportsQuery,
+      query(reportsCollection, orderBy('createdAt', 'desc')),
       (snapshot) => {
         setReports(snapshot.docs.map((doc) => doc.data()));
-        setError(null);
+        setLoadedAt(Date.now());
+        setFailed(false);
         setLoading(false);
       },
       (err) => {
         console.error('Failed to load reports for admin dashboard:', err);
-        setError('Could not load reports. Please try again.');
+        setFailed(true);
         setLoading(false);
       }
     );
-
     return unsubscribe;
   }, [isAdmin]);
 
-  const filteredReports = useMemo(() => {
-    let result = reports;
+  const summary = useMemo(() => {
+    const weekAgo = loadedAt - WEEK_MS;
+    return {
+      total: reports.length,
+      waiting: reports.filter((r) => r.status === 'Pending' || r.status === 'Under Review').length,
+      inProgress: reports.filter((r) => r.status === 'In Progress').length,
+      resolvedThisWeek: reports.filter(
+        (r) => r.status === 'Resolved' && (r.updatedAt?.toMillis?.() ?? 0) >= weekAgo
+      ).length,
+    };
+  }, [reports, loadedAt]);
 
-    if (statusFilter !== 'All') {
-      result = result.filter((report) => report.status === statusFilter);
-    }
-
-    if (categoryFilter !== 'All') {
-      result = result.filter((report) => report.category === categoryFilter);
-    }
-
-    if (areaFilter !== 'All') {
-      result = result.filter((report) => report.area === areaFilter);
-    }
-
-    const searchTerm = search.trim().toLowerCase();
-    if (searchTerm) {
-      result = result.filter((report) => {
-        return (
-          report.title.toLowerCase().includes(searchTerm) ||
-          report.description.toLowerCase().includes(searchTerm) ||
-          (report.address ?? '').toLowerCase().includes(searchTerm)
-        );
-      });
-    }
-
-    // Base query is already newest-first; reverse for the oldest-first toggle
-    // instead of re-querying.
+  const filtered = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    const result = reports.filter(
+      (r) =>
+        (statusFilter === 'All' || r.status === statusFilter) &&
+        (categoryFilter === 'All' || r.category === categoryFilter) &&
+        (areaFilter === 'All' || r.area === areaFilter) &&
+        (!term ||
+          r.title.toLowerCase().includes(term) ||
+          r.description.toLowerCase().includes(term) ||
+          (r.address ?? '').toLowerCase().includes(term))
+    );
     return oldestFirst ? [...result].reverse() : result;
   }, [reports, statusFilter, categoryFilter, areaFilter, search, oldestFirst]);
 
+  const filtersActive =
+    statusFilter !== 'All' || categoryFilter !== 'All' || areaFilter !== 'All' || !!search.trim();
+
+  const clearFilters = () => {
+    setStatusFilter('All');
+    setCategoryFilter('All');
+    setAreaFilter('All');
+    setSearch('');
+  };
+
   if (!isAdmin) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center bg-white px-6">
-        <Icon name="access-denied" size={40} color={colors.text.placeholder} />
-        <Text className="mb-1 mt-3 text-center text-base font-semibold text-gray-900">
-          Access denied
-        </Text>
-        <Text className="text-center text-sm text-gray-500">
-          You don&apos;t have permission to view this page.
-        </Text>
-      </SafeAreaView>
+      <Screen>
+        <View className="flex-1 justify-center">
+          <EmptyState
+            icon="access-denied"
+            title="Administrators only"
+            body="This page is for council and authority staff."
+          />
+        </View>
+      </Screen>
     );
   }
 
-  return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="px-6 pb-2 pt-4">
-        <Text className="text-3xl font-bold text-gray-900">Admin</Text>
+  const header = (
+    <View>
+      <View className="mb-5 flex-row gap-2">
+        {loading ? (
+          [0, 1, 2, 3].map((i) => <Skeleton key={i} height={72} radius={radius.lg} className="flex-1" />)
+        ) : (
+          <>
+            <SummaryCard label="Total" value={summary.total} color={colors.text.primary} />
+            <SummaryCard label="Waiting" value={summary.waiting} color={colors.status.Pending.fg} />
+            <SummaryCard label="In progress" value={summary.inProgress} color={colors.status['In Progress'].fg} />
+            <SummaryCard
+              label="Fixed this week"
+              value={summary.resolvedThisWeek}
+              color={colors.status.Resolved.fg}
+            />
+          </>
+        )}
       </View>
 
-      <View className="px-6">
-        <View className="mb-3 flex-row gap-3">
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-gray-700">Status</Text>
-            <Select
-              sheetTitle="Filter by status"
-              options={STATUS_FILTERS}
-              value={statusFilter}
-              onSelect={setStatusFilter}
-              placeholder="All"
-            />
-          </View>
-          <View className="flex-1">
-            <Text className="mb-1 text-xs font-medium text-gray-700">Category</Text>
-            <Select
-              sheetTitle="Filter by category"
-              options={CATEGORY_FILTERS}
-              value={categoryFilter}
-              onSelect={setCategoryFilter}
-              placeholder="All"
-            />
-          </View>
-        </View>
+      <Input
+        label="Search"
+        icon="search"
+        value={search}
+        onChangeText={setSearch}
+        placeholder="Title, description or address"
+        returnKeyType="search"
+        className="mb-3"
+      />
 
-        <View className="mb-3">
-          <Text className="mb-1 text-xs font-medium text-gray-700">Area</Text>
-          <Select
-            sheetTitle="Filter by area"
-            options={AREA_FILTERS}
-            value={areaFilter}
-            onSelect={setAreaFilter}
-            placeholder="All"
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 pb-3">
+        <Chip label="All" selected={statusFilter === 'All'} onPress={() => setStatusFilter('All')} />
+        {ALL_STATUSES.map((s) => (
+          <Chip
+            key={s}
+            label={s}
+            dot={statusColors(s).solid}
+            selected={statusFilter === s}
+            onPress={() => setStatusFilter(statusFilter === s ? 'All' : s)}
           />
-        </View>
+        ))}
+      </ScrollView>
 
-        <View className="mb-3 flex-row items-center rounded-lg border border-gray-200 px-3">
-          <Icon name="search" size={16} color={colors.text.placeholder} />
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Search title, description, or address"
-            placeholderTextColor={colors.text.placeholder}
-            className="ml-2 flex-1 py-2.5 text-sm text-gray-900"
-          />
-        </View>
-
-        <View className="mb-2 flex-row items-center justify-between">
-          <Text className="text-xs text-gray-500">
-            {filteredReports.length} report{filteredReports.length === 1 ? '' : 's'}
-          </Text>
-          <Pressable
-            onPress={() => setOldestFirst((value) => !value)}
-            className="flex-row items-center">
-            <Icon name="sort" size={14} color={colors.brand.teal600} />
-            <Text className="ml-1 text-xs font-medium text-primary">
-              {oldestFirst ? 'Oldest first' : 'Newest first'}
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-
-      {loading ? (
-        <View className="flex-1 items-center justify-center">
-          <ActivityIndicator size="large" color={colors.brand.teal600} />
-        </View>
-      ) : error ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-center text-sm text-error">{error}</Text>
-        </View>
-      ) : filteredReports.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Icon name="inbox" size={40} color={colors.text.placeholder} />
-          <Text className="mb-1 mt-3 text-center text-base font-semibold text-gray-900">
-            No reports match your filters
-          </Text>
-          <Text className="text-center text-sm text-gray-500">
-            Try a different status, category, area, or search term.
-          </Text>
-        </View>
-      ) : (
-        <FlatList
-          data={filteredReports}
-          keyExtractor={(item) => item.id}
-          contentContainerClassName="px-6 pb-10"
-          renderItem={({ item }) => (
-            <ReportCard report={item} onPress={() => router.push(`/report/${item.id}`)} />
-          )}
+      <View className="mb-3 flex-row gap-3">
+        <Select
+          className="flex-1"
+          sheetTitle="Filter by problem"
+          options={['All', ...CATEGORY_ORDER] as (Category | 'All')[]}
+          value={categoryFilter}
+          onSelect={setCategoryFilter}
+          getLabel={(v) => (v === 'All' ? 'All problems' : v)}
+          placeholder="All problems"
         />
-      )}
-    </SafeAreaView>
+        <Select
+          className="flex-1"
+          sheetTitle="Filter by area"
+          options={['All', ...AREA_ORDER] as (Area | 'All')[]}
+          value={areaFilter}
+          onSelect={setAreaFilter}
+          getLabel={(v) => (v === 'All' ? 'All areas' : v)}
+          placeholder="All areas"
+        />
+      </View>
+
+      <View className="mb-2 flex-row items-center justify-between">
+        <Text variant="label" color="muted">
+          {loading ? 'Loading…' : `${filtered.length} report${filtered.length === 1 ? '' : 's'}`}
+        </Text>
+        <View className="flex-row items-center">
+          {filtersActive ? (
+            <Button label="Clear filters" variant="ghost" fullWidth={false} onPress={clearFilters} />
+          ) : null}
+          <IconButton
+            icon="sort"
+            accessibilityLabel={
+              oldestFirst ? 'Sorted oldest first. Show newest first' : 'Sorted newest first. Show oldest first'
+            }
+            onPress={() => setOldestFirst((v) => !v)}
+          />
+        </View>
+      </View>
+    </View>
+  );
+
+  return (
+    <Screen>
+      <ScreenHeader title="Admin" subtitle="Reports from across The Gambia" />
+      <OfflineBanner />
+      <FlatList
+        data={loading ? [] : filtered}
+        keyExtractor={(item) => item.id}
+        contentContainerClassName="flex-grow px-5 pb-12 pt-1"
+        keyboardShouldPersistTaps="handled"
+        ListHeaderComponent={header}
+        renderItem={({ item }) => <AdminRow report={item} onOpen={() => router.push(`/report/${item.id}`)} />}
+        ListEmptyComponent={
+          loading ? (
+            <View>
+              <ReportCardSkeleton />
+              <ReportCardSkeleton />
+              <ReportCardSkeleton />
+            </View>
+          ) : failed ? (
+            <EmptyState
+              tone="error"
+              icon="offline"
+              title="We couldn't load reports"
+              body="Check your internet connection. The list will update by itself when you're back online."
+            />
+          ) : (
+            <EmptyState
+              icon="inbox"
+              title={filtersActive ? 'No reports match these filters' : 'No reports yet'}
+              body={
+                filtersActive
+                  ? 'Try a different status, problem, area or search.'
+                  : 'New reports will appear here as soon as citizens send them.'
+              }
+              actionLabel={filtersActive ? 'Clear filters' : undefined}
+              onAction={filtersActive ? clearFilters : undefined}
+            />
+          )
+        }
+      />
+    </Screen>
   );
 }

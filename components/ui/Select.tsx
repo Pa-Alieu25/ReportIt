@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Modal, Pressable, ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -17,6 +17,8 @@ type SelectProps<T extends string> = {
   getLabel?: (value: T) => string;
   error?: string | null;
   className?: string;
+  /** Replace the default field with a custom trigger (e.g. a button). */
+  renderTrigger?: (open: () => void) => ReactNode;
 };
 
 // Cross-platform dropdown: a field that opens a bottom sheet of options.
@@ -30,6 +32,7 @@ export function Select<T extends string>({
   getLabel = (option) => option,
   error,
   className,
+  renderTrigger,
 }: SelectProps<T>) {
   const [open, setOpen] = useState(false);
   const insets = useSafeAreaInsets();
@@ -41,6 +44,8 @@ export function Select<T extends string>({
           {label}
         </Text>
       ) : null}
+      {renderTrigger ? renderTrigger(() => setOpen(true)) : null}
+      {renderTrigger ? null : (
       <Pressable
         onPress={() => setOpen(true)}
         accessibilityRole="button"
@@ -62,6 +67,7 @@ export function Select<T extends string>({
           <Icon name="chevron-right" size={18} color={colors.text.muted} />
         </View>
       </Pressable>
+      )}
       {error ? (
         <Text variant="caption" style={{ color: colors.feedback.error.fg }} className="mt-1.5">
           {error}
