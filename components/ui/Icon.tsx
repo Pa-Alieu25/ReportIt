@@ -7,6 +7,7 @@ import Building from 'lucide-react-native/icons/building';
 import Calendar from 'lucide-react-native/icons/calendar';
 import Camera from 'lucide-react-native/icons/camera';
 import Check from 'lucide-react-native/icons/check';
+import ChevronLeft from 'lucide-react-native/icons/chevron-left';
 import ChevronRight from 'lucide-react-native/icons/chevron-right';
 import CircleCheck from 'lucide-react-native/icons/circle-check';
 import CircleExclamationPoint from 'lucide-react-native/icons/circle-exclamation-point';
@@ -71,6 +72,7 @@ const ICONS = {
   locate: LocateFixed,
   camera: Camera,
   photo: ImageIcon,
+  back: ChevronLeft,
   'chevron-right': ChevronRight,
   search: Search,
   sort: ArrowUpDown,

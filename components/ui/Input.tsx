@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type Ref } from 'react';
 import { Pressable, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Icon, type IconName } from '@/components/ui/Icon';
@@ -7,6 +7,7 @@ import { colors, radius, touchTarget, typography } from '@/theme';
 import { fontStyle } from '@/theme/fonts';
 
 type InputProps = Omit<TextInputProps, 'style'> & {
+  ref?: Ref<TextInput>;
   label: string;
   error?: string | null;
   hint?: string;
@@ -17,6 +18,7 @@ type InputProps = Omit<TextInputProps, 'style'> & {
 };
 
 export function Input({
+  ref,
   label,
   error,
   hint,
@@ -60,6 +62,7 @@ export function Input({
           </View>
         ) : null}
         <TextInput
+          ref={ref}
           accessibilityLabel={label}
           accessibilityHint={hint}
           placeholderTextColor={colors.text.placeholder}

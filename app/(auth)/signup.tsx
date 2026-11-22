@@ -1,115 +1,123 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRef, useState } from 'react';
+import { Pressable, View, type TextInput } from 'react-native';
 
+import { AuthLayout } from '@/components/AuthLayout';
+import { Button } from '@/components/ui/Button';
+import { InlineMessage } from '@/components/ui/InlineMessage';
+import { Input } from '@/components/ui/Input';
+import { Text } from '@/components/ui/Text';
 import { signUp } from '@/lib/auth';
 import { isValidEmail, MIN_PASSWORD_LENGTH } from '@/lib/validation';
-import { colors } from '@/theme';
+
+type Errors = { name?: string; email?: string; password?: string };
 
 export default function SignupScreen() {
+  const emailRef = useRef<TextInput>(null);
+  const passwordRef = useRef<TextInput>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    setError(null);
-
-    if (!name.trim() || !email.trim() || !password) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
-      return;
-    }
+    setFormError(null);
+    const next: Errors = {};
+    if (!name.trim()) next.name = 'Enter your name.';
+    if (!email.trim()) next.email = 'Enter your email address.';
+    else if (!isValidEmail(email)) next.email = 'This email address doesn’t look right.';
+    if (password.length < MIN_PASSWORD_LENGTH)
+      next.password = `Use at least ${MIN_PASSWORD_LENGTH} characters.`;
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
     try {
       await signUp(name.trim(), email.trim(), password);
       // The root layout's auth listener + Stack.Protected guard handle navigation.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
-    } finally {
+      setFormError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       setSubmitting(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 justify-center px-6">
-        <Text className="mb-1 text-3xl font-bold text-gray-900">Create account</Text>
-        <Text className="mb-8 text-base text-gray-500">
-          Join ReportIt to report issues affecting your community.
-        </Text>
+    <AuthLayout
+      title="Create your account"
+      subtitle="Join your neighbours in getting problems fixed across The Gambia.">
+      {formError ? <InlineMessage tone="error" message={formError} className="mb-4" /> : null}
 
-        {error ? (
-          <View className="mb-4 rounded-lg border border-error/30 bg-error/10 p-3">
-            <Text className="text-sm text-error">{error}</Text>
-          </View>
-        ) : null}
+      <Input
+        label="Full name"
+        icon="user"
+        value={name}
+        onChangeText={setName}
+        error={errors.name}
+        maxLength={100}
+        autoCapitalize="words"
+        autoComplete="name"
+        textContentType="name"
+        returnKeyType="next"
+        onSubmitEditing={() => emailRef.current?.focus()}
+        placeholder="e.g. Fatou Jallow"
+        className="mb-4"
+      />
+      <Input
+        ref={emailRef}
+        label="Email"
+        icon="mail"
+        value={email}
+        onChangeText={setEmail}
+        error={errors.email}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        autoComplete="email"
+        textContentType="emailAddress"
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        placeholder="name@example.com"
+        className="mb-4"
+      />
+      <Input
+        ref={passwordRef}
+        label="Password"
+        icon="lock"
+        value={password}
+        onChangeText={setPassword}
+        error={errors.password}
+        hint={`At least ${MIN_PASSWORD_LENGTH} characters.`}
+        secureTextEntry
+        revealable
+        autoComplete="new-password"
+        textContentType="newPassword"
+        returnKeyType="go"
+        onSubmitEditing={handleSubmit}
+        placeholder="Create a password"
+        className="mb-6"
+      />
 
-        <Text className="mb-1 text-sm font-medium text-gray-700">Name</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          maxLength={100}
-          autoCapitalize="words"
-          autoComplete="name"
-          placeholder="Fatou Jallow"
-          placeholderTextColor={colors.text.placeholder}
-          className="mb-4 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
-        />
+      <Button
+        label="Create account"
+        size="lg"
+        haptic
+        loading={submitting}
+        loadingLabel="Creating your account…"
+        onPress={handleSubmit}
+      />
 
-        <Text className="mb-1 text-sm font-medium text-gray-700">Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          autoComplete="email"
-          placeholder="you@example.com"
-          placeholderTextColor={colors.text.placeholder}
-          className="mb-4 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
-        />
-
-        <Text className="mb-1 text-sm font-medium text-gray-700">Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="password-new"
-          placeholder="••••••••"
-          placeholderTextColor={colors.text.placeholder}
-          className="mb-6 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
-        />
-
-        <Pressable
-          onPress={handleSubmit}
-          disabled={submitting}
-          className={`mb-4 items-center rounded-lg bg-primary px-4 py-3 ${submitting ? 'opacity-60' : ''}`}>
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-base font-semibold text-white">Sign Up</Text>
-          )}
-        </Pressable>
-
+      <View className="mt-6 flex-row items-center justify-center">
+        <Text color="muted">Already have an account? </Text>
         <Link href="/login" asChild>
-          <Pressable>
-            <Text className="text-center text-sm text-gray-600">
-              Already have an account? <Text className="font-semibold text-primary">Sign in</Text>
+          <Pressable accessibilityRole="link" hitSlop={8} className="justify-center" style={{ minHeight: 44 }}>
+            <Text weight="semibold" color="link">
+              Sign in
             </Text>
           </Pressable>
         </Link>
       </View>
-    </SafeAreaView>
+    </AuthLayout>
   );
 }

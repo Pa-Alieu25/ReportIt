@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signOut,
   updateProfile,
@@ -27,6 +28,8 @@ function getFriendlyAuthErrorMessage(error: unknown): string {
       return 'Incorrect email or password.';
     case 'auth/too-many-requests':
       return 'Too many attempts. Please wait a moment and try again.';
+    case 'auth/missing-email':
+      return 'Please enter your email address.';
     case 'auth/network-request-failed':
       return 'Network error. Check your connection and try again.';
     default:
@@ -103,6 +106,17 @@ export async function signIn(email: string, password: string) {
 export async function signOutUser() {
   try {
     await signOut(auth);
+  } catch (error) {
+    throw new Error(getFriendlyAuthErrorMessage(error));
+  }
+}
+
+// Firebase sends the reset link itself. With email enumeration protection on,
+// it succeeds even for unknown addresses, so the UI must not say whether an
+// account exists.
+export async function sendPasswordReset(email: string) {
+  try {
+    await sendPasswordResetEmail(auth, email);
   } catch (error) {
     throw new Error(getFriendlyAuthErrorMessage(error));
   }

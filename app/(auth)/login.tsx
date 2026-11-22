@@ -1,98 +1,106 @@
 import { Link } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useRef, useState } from 'react';
+import { Pressable, View, type TextInput } from 'react-native';
 
+import { AuthLayout } from '@/components/AuthLayout';
+import { Button } from '@/components/ui/Button';
+import { InlineMessage } from '@/components/ui/InlineMessage';
+import { Input } from '@/components/ui/Input';
+import { Text } from '@/components/ui/Text';
 import { signIn } from '@/lib/auth';
 import { isValidEmail } from '@/lib/validation';
-import { colors } from '@/theme';
+
+type Errors = { email?: string; password?: string };
 
 export default function LoginScreen() {
+  const passwordRef = useRef<TextInput>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Errors>({});
+  const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async () => {
-    setError(null);
-
-    if (!email.trim() || !password) {
-      setError('Please fill in all fields.');
-      return;
-    }
-    if (!isValidEmail(email)) {
-      setError('Please enter a valid email address.');
-      return;
-    }
+    setFormError(null);
+    const next: Errors = {};
+    if (!email.trim()) next.email = 'Enter your email address.';
+    else if (!isValidEmail(email)) next.email = 'This email address doesn’t look right.';
+    if (!password) next.password = 'Enter your password.';
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     setSubmitting(true);
     try {
       await signIn(email.trim(), password);
       // The root layout's auth listener + Stack.Protected guard handle navigation.
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Something went wrong.');
-    } finally {
+      setFormError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
       setSubmitting(false);
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 justify-center px-6">
-        <Text className="mb-1 text-3xl font-bold text-gray-900">Welcome back</Text>
-        <Text className="mb-8 text-base text-gray-500">
-          Sign in to report and track issues in your community.
-        </Text>
+    <AuthLayout title="Welcome back" subtitle="Sign in to report problems and follow their progress.">
+      {formError ? <InlineMessage tone="error" message={formError} className="mb-4" /> : null}
 
-        {error ? (
-          <View className="mb-4 rounded-lg border border-error/30 bg-error/10 p-3">
-            <Text className="text-sm text-error">{error}</Text>
-          </View>
-        ) : null}
+      <Input
+        label="Email"
+        icon="mail"
+        value={email}
+        onChangeText={setEmail}
+        error={errors.email}
+        autoCapitalize="none"
+        autoCorrect={false}
+        keyboardType="email-address"
+        autoComplete="email"
+        textContentType="emailAddress"
+        returnKeyType="next"
+        onSubmitEditing={() => passwordRef.current?.focus()}
+        placeholder="name@example.com"
+        className="mb-4"
+      />
+      <Input
+        ref={passwordRef}
+        label="Password"
+        icon="lock"
+        value={password}
+        onChangeText={setPassword}
+        error={errors.password}
+        secureTextEntry
+        revealable
+        autoComplete="current-password"
+        textContentType="password"
+        returnKeyType="go"
+        onSubmitEditing={handleSubmit}
+        placeholder="Your password"
+      />
 
-        <Text className="mb-1 text-sm font-medium text-gray-700">Email</Text>
-        <TextInput
-          value={email}
-          onChangeText={setEmail}
-          autoCapitalize="none"
-          autoCorrect={false}
-          keyboardType="email-address"
-          autoComplete="email"
-          placeholder="you@example.com"
-          placeholderTextColor={colors.text.placeholder}
-          className="mb-4 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
-        />
-
-        <Text className="mb-1 text-sm font-medium text-gray-700">Password</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          autoComplete="password"
-          placeholder="••••••••"
-          placeholderTextColor={colors.text.placeholder}
-          className="mb-6 rounded-lg border border-gray-200 px-4 py-3 text-base text-gray-900"
-        />
-
-        <Pressable
-          onPress={handleSubmit}
-          disabled={submitting}
-          className={`mb-4 items-center rounded-lg bg-primary px-4 py-3 ${submitting ? 'opacity-60' : ''}`}>
-          {submitting ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text className="text-base font-semibold text-white">Sign In</Text>
-          )}
-        </Pressable>
-
-        <Link href="/signup" asChild>
-          <Pressable>
-            <Text className="text-center text-sm text-gray-600">
-              Don&apos;t have an account? <Text className="font-semibold text-primary">Sign up</Text>
+      <View className="mb-6 mt-1 items-end">
+        <Link href="/forgot-password" asChild>
+          <Pressable
+            accessibilityRole="link"
+            hitSlop={8}
+            className="justify-center"
+            style={{ minHeight: 44 }}>
+            <Text variant="label" weight="semibold" color="link">
+              Forgot password?
             </Text>
           </Pressable>
         </Link>
       </View>
-    </SafeAreaView>
+
+      <Button label="Sign in" size="lg" loading={submitting} loadingLabel="Signing in…" onPress={handleSubmit} />
+
+      <View className="mt-6 flex-row items-center justify-center">
+        <Text color="muted">New to ReportIT? </Text>
+        <Link href="/signup" asChild>
+          <Pressable accessibilityRole="link" hitSlop={8} className="justify-center" style={{ minHeight: 44 }}>
+            <Text weight="semibold" color="link">
+              Create an account
+            </Text>
+          </Pressable>
+        </Link>
+      </View>
+    </AuthLayout>
   );
 }
