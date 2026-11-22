@@ -1,4 +1,4 @@
-import { Pressable } from 'react-native';
+import { Pressable, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
@@ -9,10 +9,12 @@ type ChipProps = {
   selected?: boolean;
   onPress?: () => void;
   icon?: IconName;
+  /** Small colour dot before the label, e.g. a status colour. */
+  dot?: string;
 };
 
 // Filter/toggle chip. Visually 36dp tall; hitSlop brings the touch target to 44dp.
-export function Chip({ label, selected = false, onPress, icon }: ChipProps) {
+export function Chip({ label, selected = false, onPress, icon, dot }: ChipProps) {
   const fg = selected ? colors.text.inverse : colors.text.secondary;
   return (
     <Pressable
@@ -35,7 +37,19 @@ export function Chip({ label, selected = false, onPress, icon }: ChipProps) {
             : colors.surface.card,
       })}>
       {icon ? <Icon name={icon} size={16} color={fg} /> : null}
-      <Text variant="label" style={{ color: fg, marginLeft: icon ? 6 : 0 }}>
+      {dot ? (
+        <View
+          style={{
+            width: 10,
+            height: 10,
+            borderRadius: 5,
+            backgroundColor: dot,
+            borderWidth: selected ? 1.5 : 0,
+            borderColor: colors.surface.card,
+          }}
+        />
+      ) : null}
+      <Text variant="label" style={{ color: fg, marginLeft: icon || dot ? 6 : 0 }}>
         {label}
       </Text>
     </Pressable>
