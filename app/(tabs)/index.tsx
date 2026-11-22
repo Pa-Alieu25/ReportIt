@@ -1,7 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { Pressable, ScrollView, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ReportCard } from '@/components/ReportCard';
 import { Button } from '@/components/ui/Button';
@@ -12,6 +11,7 @@ import { Icon } from '@/components/ui/Icon';
 import { InlineMessage } from '@/components/ui/InlineMessage';
 import { LogoMark } from '@/components/ui/Logo';
 import { OfflineBanner } from '@/components/ui/OfflineBanner';
+import { Screen } from '@/components/ui/Screen';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ReportCardSkeleton, Skeleton } from '@/components/ui/Skeleton';
 import { Text } from '@/components/ui/Text';
@@ -155,7 +155,7 @@ export default function HomeScreen() {
     );
 
   return (
-    <SafeAreaView edges={['top']} className="flex-1" style={{ backgroundColor: colors.surface.background }}>
+    <Screen>
       <ScreenHeader />
       <OfflineBanner />
       <ScrollView contentContainerClassName="px-5 pb-10 pt-2" showsVerticalScrollIndicator={false}>
@@ -220,6 +220,6 @@ export default function HomeScreen() {
 
         <TogetherCard />
       </ScrollView>
-    </SafeAreaView>
+    </Screen>
   );
 }
