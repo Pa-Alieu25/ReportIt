@@ -7,7 +7,7 @@ import {
   type AuthError,
   type User as FirebaseUser,
 } from 'firebase/auth';
-import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore';
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 
 import { auth } from '@/lib/firebase';
 import { usersCollection } from '@/lib/firestore';
@@ -120,4 +120,12 @@ export async function sendPasswordReset(email: string) {
   } catch (error) {
     throw new Error(getFriendlyAuthErrorMessage(error));
   }
+}
+
+// Rules allow a user to change only their own name.
+export async function updateUserName(user: FirebaseUser, name: string) {
+  const trimmed = name.trim().slice(0, 100);
+  await updateDoc(doc(usersCollection, user.uid), { name: trimmed });
+  // Keep the auth display name in step; not critical if it fails.
+  await updateProfile(user, { displayName: trimmed }).catch(() => {});
 }
