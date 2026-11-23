@@ -52,9 +52,10 @@ export function Card({
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       className={className}
-      style={({ pressed }) => [base, { transform: [{ scale: pressed ? 0.98 : 1 }] }, style]}
       {...rest}>
-      {children}
+      {({ pressed }) => (
+        <View style={[base, { transform: [{ scale: pressed ? 0.98 : 1 }] }, style]}>{children}</View>
+      )}
     </Pressable>
   );
 }

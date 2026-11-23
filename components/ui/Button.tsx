@@ -58,47 +58,54 @@ export function Button({
   const v = VARIANTS[variant];
   const inactive = disabled || loading;
 
-  // className goes on a wrapper: NativeWind replaces a Pressable's function
-  // style when it also has a className, which hid the background.
+  // className goes on a wrapper, and the visual styles on an inner View:
+  // NativeWind can drop a Pressable's style function on iOS, which hid the
+  // background and left white text on a white screen.
   return (
     <View className={className} style={{ alignSelf: fullWidth ? 'stretch' : 'flex-start' }}>
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      accessibilityState={{ disabled: !!inactive, busy: loading }}
-      disabled={inactive}
-      onPress={(event) => {
-        if (haptic) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-        onPress?.(event);
-      }}
-      style={({ pressed }) => ({
-        minHeight: HEIGHT[size],
-        borderRadius: radius.md,
-        backgroundColor: pressed ? v.pressedBg : v.bg,
-        borderWidth: v.border ? 1.5 : 0,
-        borderColor: v.border,
-        opacity: disabled && !loading ? 0.5 : 1,
-        transform: [{ scale: pressed ? 0.98 : 1 }],
-        paddingHorizontal: 20,
-        justifyContent: 'center',
-      })}
-      {...rest}>
-      <View className="flex-row items-center justify-center">
-        {loading ? (
-          <ActivityIndicator color={v.fg} />
-        ) : icon ? (
-          <Icon name={icon} size={size === 'lg' ? 22 : 20} color={v.fg} />
-        ) : null}
-        {loading && !loadingLabel ? null : (
-          <Text
-            variant={size === 'lg' ? 'h3' : 'bodyStrong'}
-            weight="semibold"
-            style={{ color: v.fg, marginLeft: loading || icon ? 8 : 0 }}>
-            {loading && loadingLabel ? loadingLabel : label}
-          </Text>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={label}
+        accessibilityState={{ disabled: !!inactive, busy: loading }}
+        disabled={inactive}
+        onPress={(event) => {
+          if (haptic) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          onPress?.(event);
+        }}
+        {...rest}>
+        {({ pressed }) => (
+          <View
+            style={{
+              minHeight: HEIGHT[size],
+              borderRadius: radius.md,
+              backgroundColor: pressed ? v.pressedBg : v.bg,
+              borderWidth: v.border ? 1.5 : 0,
+              borderColor: v.border,
+              opacity: disabled && !loading ? 0.5 : 1,
+              transform: [{ scale: pressed ? 0.98 : 1 }],
+              paddingHorizontal: 20,
+              paddingVertical: 10,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}>
+            {loading ? (
+              <ActivityIndicator color={v.fg} />
+            ) : icon ? (
+              <Icon name={icon} size={size === 'lg' ? 22 : 20} color={v.fg} />
+            ) : null}
+            {loading && !loadingLabel ? null : (
+              <Text
+                variant={size === 'lg' ? 'h3' : 'bodyStrong'}
+                weight="semibold"
+                align="center"
+                style={{ color: v.fg, marginLeft: loading || icon ? 8 : 0, flexShrink: 1 }}>
+                {loading && loadingLabel ? loadingLabel : label}
+              </Text>
+            )}
+          </View>
         )}
-      </View>
-    </Pressable>
+      </Pressable>
     </View>
   );
 }

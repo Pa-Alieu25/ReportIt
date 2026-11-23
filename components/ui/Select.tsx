@@ -46,27 +46,33 @@ export function Select<T extends string>({
       ) : null}
       {renderTrigger ? renderTrigger(() => setOpen(true)) : null}
       {renderTrigger ? null : (
-      <Pressable
-        onPress={() => setOpen(true)}
-        accessibilityRole="button"
-        accessibilityLabel={`${label ?? sheetTitle}: ${value ? getLabel(value) : placeholder}`}
-        accessibilityHint="Opens a list of options"
-        className="flex-row items-center justify-between"
-        style={({ pressed }) => ({
-          minHeight: 52,
-          paddingHorizontal: 14,
-          borderRadius: radius.md,
-          borderWidth: error ? 1.5 : 1,
-          borderColor: error ? colors.feedback.error.fg : colors.border.default,
-          backgroundColor: pressed ? colors.surface.muted : colors.surface.card,
-        })}>
-        <Text color={value ? 'primary' : 'placeholder'} numberOfLines={1} style={{ flex: 1 }}>
-          {value ? getLabel(value) : placeholder}
-        </Text>
-        <View style={{ transform: [{ rotate: '90deg' }] }}>
-          <Icon name="chevron-right" size={18} color={colors.text.muted} />
-        </View>
-      </Pressable>
+        <Pressable
+          onPress={() => setOpen(true)}
+          accessibilityRole="button"
+          accessibilityLabel={`${label ?? sheetTitle}: ${value ? getLabel(value) : placeholder}`}
+          accessibilityHint="Opens a list of options">
+          {({ pressed }) => (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                minHeight: 52,
+                paddingHorizontal: 14,
+                borderRadius: radius.md,
+                borderWidth: error ? 1.5 : 1,
+                borderColor: error ? colors.feedback.error.fg : colors.border.default,
+                backgroundColor: pressed ? colors.surface.muted : colors.surface.card,
+              }}>
+              <Text color={value ? 'primary' : 'placeholder'} numberOfLines={1} style={{ flex: 1 }}>
+                {value ? getLabel(value) : placeholder}
+              </Text>
+              <View style={{ transform: [{ rotate: '90deg' }] }}>
+                <Icon name="chevron-right" size={18} color={colors.text.muted} />
+              </View>
+            </View>
+          )}
+        </Pressable>
       )}
       {error ? (
         <Text variant="caption" style={{ color: colors.feedback.error.fg }} className="mt-1.5">
@@ -112,21 +118,28 @@ export function Select<T extends string>({
                       setOpen(false);
                     }}
                     accessibilityRole="button"
-                    accessibilityState={{ selected }}
-                    className="flex-row items-center justify-between px-3"
-                    style={({ pressed }) => ({
-                      minHeight: touchTarget + 8,
-                      borderRadius: radius.md,
-                      backgroundColor: selected
-                        ? colors.brand.teal50
-                        : pressed
-                          ? colors.surface.muted
-                          : 'transparent',
-                    })}>
-                    <Text weight={selected ? 'semibold' : 'regular'} style={{ flex: 1 }}>
-                      {getLabel(option)}
-                    </Text>
-                    {selected ? <Icon name="success" size={20} color={colors.brand.teal600} /> : null}
+                    accessibilityState={{ selected }}>
+                    {({ pressed }) => (
+                      <View
+                        style={{
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          paddingHorizontal: 12,
+                          minHeight: touchTarget + 8,
+                          borderRadius: radius.md,
+                          backgroundColor: selected
+                            ? colors.brand.teal50
+                            : pressed
+                              ? colors.surface.muted
+                              : 'transparent',
+                        }}>
+                        <Text weight={selected ? 'semibold' : 'regular'} style={{ flex: 1 }}>
+                          {getLabel(option)}
+                        </Text>
+                        {selected ? <Icon name="success" size={20} color={colors.brand.teal600} /> : null}
+                      </View>
+                    )}
                   </Pressable>
                 );
               })}
