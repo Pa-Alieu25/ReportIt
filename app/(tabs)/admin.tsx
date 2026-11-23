@@ -5,7 +5,6 @@ import { FlatList, ScrollView, View } from 'react-native';
 
 import { ReportCard } from '@/components/ReportCard';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { Chip } from '@/components/ui/Chip';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { IconButton } from '@/components/ui/IconButton';
@@ -15,6 +14,7 @@ import { Screen } from '@/components/ui/Screen';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { Select } from '@/components/ui/Select';
 import { ReportCardSkeleton, Skeleton } from '@/components/ui/Skeleton';
+import { StatTile } from '@/components/ui/StatTile';
 import { Text } from '@/components/ui/Text';
 import { toast } from '@/components/ui/Toast';
 import { AREA_ORDER } from '@/constants/area';
@@ -27,19 +27,6 @@ import { colors, radius, statusColors } from '@/theme';
 import type { Area, Category, Report, Status } from '@/types/models';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-function SummaryCard({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <Card padding={12} className="flex-1" accessibilityLabel={`${label}: ${value}`}>
-      <Text variant="h1" style={{ color }}>
-        {value}
-      </Text>
-      <Text variant="caption" color="muted" numberOfLines={2}>
-        {label}
-      </Text>
-    </Card>
-  );
-}
 
 // A report card with a one-tap status change underneath. Closing a report
 // (Rejected) needs a reason for the reporter, so that opens the full detail.
@@ -181,19 +168,25 @@ export default function AdminScreen() {
 
   const header = (
     <View>
-      <View className="mb-5 flex-row gap-2">
+      {/* 2x2 grid so labels have room, even at large text sizes. */}
+      <View className="mb-5 gap-3">
         {loading ? (
-          [0, 1, 2, 3].map((i) => <Skeleton key={i} height={72} radius={radius.lg} className="flex-1" />)
+          [0, 1].map((row) => (
+            <View key={row} className="flex-row gap-3">
+              <Skeleton height={60} radius={radius.lg} className="flex-1" />
+              <Skeleton height={60} radius={radius.lg} className="flex-1" />
+            </View>
+          ))
         ) : (
           <>
-            <SummaryCard label="Total" value={summary.total} color={colors.text.primary} />
-            <SummaryCard label="Waiting" value={summary.waiting} color={colors.status.Pending.fg} />
-            <SummaryCard label="In progress" value={summary.inProgress} color={colors.status['In Progress'].fg} />
-            <SummaryCard
-              label="Fixed this week"
-              value={summary.resolvedThisWeek}
-              color={colors.status.Resolved.fg}
-            />
+            <View className="flex-row gap-3">
+              <StatTile label="Total" value={summary.total} color={colors.text.primary} />
+              <StatTile label="Waiting" value={summary.waiting} color={colors.status.Pending.fg} />
+            </View>
+            <View className="flex-row gap-3">
+              <StatTile label="In progress" value={summary.inProgress} color={colors.status['In Progress'].fg} />
+              <StatTile label="Fixed this week" value={summary.resolvedThisWeek} color={colors.status.Resolved.fg} />
+            </View>
           </>
         )}
       </View>

@@ -14,6 +14,7 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { Screen } from '@/components/ui/Screen';
 import { ScreenHeader } from '@/components/ui/ScreenHeader';
 import { ReportCardSkeleton, Skeleton } from '@/components/ui/Skeleton';
+import { StatTile } from '@/components/ui/StatTile';
 import { Text } from '@/components/ui/Text';
 import { POPULAR_CATEGORIES } from '@/constants/category';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -50,20 +51,6 @@ function SectionHeader({
         </Pressable>
       ) : null}
     </View>
-  );
-}
-
-function StatTile({ label, value, color }: { label: string; value: number; color: string }) {
-  return (
-    <Card padding={12} className="flex-1 flex-row items-center" accessibilityLabel={`${label}: ${value}`}>
-      <Text variant="h1" style={{ color }}>
-        {value}
-      </Text>
-      {/* Wraps instead of truncating at larger text sizes. */}
-      <Text variant="label" color="secondary" className="ml-3 flex-1">
-        {label}
-      </Text>
-    </Card>
   );
 }
 
