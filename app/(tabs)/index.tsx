@@ -55,11 +55,12 @@ function SectionHeader({
 
 function StatTile({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <Card padding={12} className="flex-1 items-center" accessibilityLabel={`${label}: ${value}`}>
+    <Card padding={12} className="flex-1 flex-row items-center" accessibilityLabel={`${label}: ${value}`}>
       <Text variant="h1" style={{ color }}>
         {value}
       </Text>
-      <Text variant="caption" color="muted" align="center" numberOfLines={1}>
+      {/* Wraps instead of truncating at larger text sizes. */}
+      <Text variant="label" color="secondary" className="ml-3 flex-1">
         {label}
       </Text>
     </Card>
@@ -180,15 +181,25 @@ export default function HomeScreen() {
             className="mb-6"
           />
         ) : (
-          <View className="mb-6 flex-row gap-2">
+          // 2x2 grid so labels have room, even at large text sizes.
+          <View className="mb-6 gap-3">
             {status === 'loading' ? (
-              [0, 1, 2, 3].map((i) => <Skeleton key={i} height={68} radius={radius.lg} className="flex-1" />)
+              [0, 1].map((row) => (
+                <View key={row} className="flex-row gap-3">
+                  <Skeleton height={60} radius={radius.lg} className="flex-1" />
+                  <Skeleton height={60} radius={radius.lg} className="flex-1" />
+                </View>
+              ))
             ) : (
               <>
-                <StatTile label="Total" value={stats.total} color={colors.text.primary} />
-                <StatTile label="Waiting" value={stats.pending} color={colors.status.Pending.fg} />
-                <StatTile label="In progress" value={stats.inProgress} color={colors.status['In Progress'].fg} />
-                <StatTile label="Fixed" value={stats.resolved} color={colors.status.Resolved.fg} />
+                <View className="flex-row gap-3">
+                  <StatTile label="Total" value={stats.total} color={colors.text.primary} />
+                  <StatTile label="Waiting" value={stats.pending} color={colors.status.Pending.fg} />
+                </View>
+                <View className="flex-row gap-3">
+                  <StatTile label="In progress" value={stats.inProgress} color={colors.status['In Progress'].fg} />
+                  <StatTile label="Fixed" value={stats.resolved} color={colors.status.Resolved.fg} />
+                </View>
               </>
             )}
           </View>
