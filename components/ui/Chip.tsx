@@ -4,6 +4,16 @@ import { Icon, type IconName } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
 import { colors, radius, shadows } from '@/theme';
 
+// Tight, slightly darker shadow: it lifts the chip off the map without being
+// cut off by the horizontal ScrollView it sits in.
+const FLOATING_SHADOW = {
+  shadowColor: colors.brand.green950,
+  shadowOpacity: 0.18,
+  shadowRadius: 4,
+  shadowOffset: { width: 0, height: 2 },
+  elevation: 3,
+};
+
 type ChipProps = {
   label: string;
   selected?: boolean;
@@ -49,7 +59,7 @@ export function Chip({ label, selected = false, onPress, icon, dot, floating = f
               : pressed
                 ? colors.surface.muted
                 : colors.surface.card,
-            ...(floating ? shadows.raised : shadows.card),
+            ...(floating ? FLOATING_SHADOW : shadows.card),
           }}>
           {icon ? <Icon name={icon} size={16} color={selected ? fg : colors.brand.teal600} /> : null}
           {dot ? (

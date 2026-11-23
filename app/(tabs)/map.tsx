@@ -17,7 +17,7 @@ import { OfflineBanner } from '@/components/ui/OfflineBanner';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { Text } from '@/components/ui/Text';
 import { CATEGORY_META, CATEGORY_ORDER } from '@/constants/category';
-import { GAMBIA_BOUNDS, GAMBIA_MAX_BOUNDS, GREATER_BANJUL_BOUNDS, isInGambia } from '@/constants/geo';
+import { DEFAULT_MAP_BOUNDS, GAMBIA_BOUNDS, GAMBIA_MAX_BOUNDS, isInGambia } from '@/constants/geo';
 import { ALL_STATUSES } from '@/constants/status';
 import { reportsCollection } from '@/lib/firestore';
 import { formatRelative } from '@/lib/format';
@@ -52,7 +52,10 @@ const LEAFLET_HTML = `
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
     var GAMBIA = ${JSON.stringify(GAMBIA_BOUNDS)};
-    var GREATER_BANJUL = ${JSON.stringify(GREATER_BANJUL_BOUNDS)};
+    var DEFAULT_VIEW = ${JSON.stringify(DEFAULT_MAP_BOUNDS)};
+    // Height of the floating chips, sent from React Native so the default
+    // view is centred in the part of the map that isn't covered.
+    var topInset = 0;
     var STATUS_COLORS = ${STATUS_SOLID};
     var DEFAULT_COLOR = '#6B7280';
     var markers = {};
@@ -63,7 +66,13 @@ const LEAFLET_HTML = `
     }
 
     var map = L.map('map', { zoomControl: false, maxBounds: ${JSON.stringify(GAMBIA_MAX_BOUNDS)}, maxBoundsViscosity: 1.0 });
-    map.fitBounds(GREATER_BANJUL);
+    function showDefault(animate) {
+      var options = { paddingTopLeft: [16, topInset + 16], paddingBottomRight: [16, 24] };
+      if (animate) map.flyToBounds(DEFAULT_VIEW, Object.assign({ duration: 0.6 }, options));
+      else map.fitBounds(DEFAULT_VIEW, options);
+    }
+
+    showDefault(false);
     map.setMinZoom(map.getBoundsZoom(GAMBIA));
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19, attribution: '&copy; OpenStreetMap contributors'
@@ -108,14 +117,21 @@ const LEAFLET_HTML = `
       }
     };
 
-    window.resetView = function () { map.flyToBounds(GREATER_BANJUL, { duration: 0.6 }); };
+    window.resetView = function () { showDefault(true); };
+
+    window.setTopInset = function (px) {
+      if (typeof px !== 'number' || !isFinite(px)) return;
+      topInset = Math.max(0, Math.min(px, 400));
+      map.invalidateSize();
+      showDefault(false);
+    };
 
     map.on('click', function () { post({ type: 'deselect' }); });
 
     // The WebView can report a stale size while the native layout settles.
     setTimeout(function () {
       map.invalidateSize();
-      map.fitBounds(GREATER_BANJUL);
+      showDefault(false);
       map.setMinZoom(map.getBoundsZoom(GAMBIA));
     }, 250);
 
@@ -189,6 +205,8 @@ export default function MapScreen() {
   const [categoryFilter, setCategoryFilter] = useState<Category | 'All'>('All');
   const [statusFilter, setStatusFilter] = useState<Status | 'All'>('All');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [chipsBottom, setChipsBottom] = useState<number | null>(null);
+  const insetSent = useRef(false);
 
   useEffect(() => {
     const unsubscribe = onSnapshot(
@@ -241,6 +259,14 @@ export default function MapScreen() {
     webViewRef.current?.injectJavaScript(`window.selectPin(${JSON.stringify(selected?.id ?? null)}); true;`);
   }, [mapReady, selected?.id]);
 
+  // Centre the default view below the chips. Sent once, so a later layout
+  // change (e.g. the offline banner) never undoes the user's panning.
+  useEffect(() => {
+    if (!mapReady || chipsBottom === null || insetSent.current) return;
+    insetSent.current = true;
+    webViewRef.current?.injectJavaScript(`window.setTopInset(${Math.round(chipsBottom)}); true;`);
+  }, [mapReady, chipsBottom]);
+
   const handleMessage = (event: WebViewMessageEvent) => {
     let message: { type?: string; id?: unknown };
     try {
@@ -270,13 +296,23 @@ export default function MapScreen() {
         accessibilityLabel="Map of reported problems in The Gambia"
       />
 
-      {/* Floating filters */}
-      <View className="absolute inset-x-0" style={{ top: insets.top + 8 }} pointerEvents="box-none">
+      {/* Floating filters, kept below the status bar by the safe-area inset. */}
+      <View
+        className="absolute inset-x-0"
+        style={{ top: insets.top + 8 }}
+        pointerEvents="box-none"
+        onLayout={(e) => setChipsBottom(e.nativeEvent.layout.y + e.nativeEvent.layout.height)}>
         <OfflineBanner />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-1.5">
-          <Chip floating label="All problems" selected={categoryFilter === 'All'} onPress={() => setCategoryFilter('All')} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-2">
+          <Chip
+            floating
+            label="All problems"
+            selected={categoryFilter === 'All'}
+            onPress={() => setCategoryFilter('All')}
+          />
           {CATEGORY_ORDER.map((category) => (
-            <Chip floating
+            <Chip
+              floating
               key={category}
               label={CATEGORY_META[category].shortLabel}
               icon={CATEGORY_META[category].icon}
@@ -285,10 +321,16 @@ export default function MapScreen() {
             />
           ))}
         </ScrollView>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-1.5">
-          <Chip floating label="Any status" selected={statusFilter === 'All'} onPress={() => setStatusFilter('All')} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-2">
+          <Chip
+            floating
+            label="Any status"
+            selected={statusFilter === 'All'}
+            onPress={() => setStatusFilter('All')}
+          />
           {ALL_STATUSES.map((status) => (
-            <Chip floating
+            <Chip
+              floating
               key={status}
               label={status}
               dot={statusColors(status).solid}

@@ -16,11 +16,13 @@ export const GAMBIA_MAX_BOUNDS: Bounds = [
   [14.0, -13.6],
 ];
 
-// Default view: Banjul, Kanifing (Serekunda, Bakau) and Brikama, where
-// most people live.
-export const GREATER_BANJUL_BOUNDS: Bounds = [
-  [13.24, -16.83],
-  [13.49, -16.56],
+// Default view: centred on Serrekunda/Kanifing, with a box that keeps
+// Banjul (13.45, -16.58) and Brikama (13.27, -16.65) comfortably in view.
+// The box is symmetric around the centre so fitting it keeps that centre.
+export const DEFAULT_MAP_CENTER: [number, number] = [13.4, -16.66];
+export const DEFAULT_MAP_BOUNDS: Bounds = [
+  [13.24, -16.75],
+  [13.56, -16.57],
 ];
 
 // True for points inside The Gambia's bounding box. This is a box, not the
