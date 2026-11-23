@@ -31,7 +31,7 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
       <Text variant="h1" style={{ color }}>
         {value}
       </Text>
-      <Text variant="caption" color="muted">
+      <Text variant="caption" color="muted" align="center">
         {label}
       </Text>
     </View>
@@ -153,8 +153,8 @@ export default function ProfileScreen() {
     <Screen>
       <ScreenHeader title="Profile" />
       <OfflineBanner />
-      <ScrollView contentContainerClassName="px-5 pb-12 pt-2" keyboardShouldPersistTaps="handled">
-        <Card className="items-center" padding={20}>
+      <ScrollView contentContainerClassName="px-5 pb-12 pt-4" keyboardShouldPersistTaps="handled">
+        <Card className="items-center" padding={20} style={{ paddingTop: 28 }}>
           <Avatar name={name} size={80} />
           {editing ? (
             <View className="mt-4 self-stretch">
