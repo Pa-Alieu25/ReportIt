@@ -2,7 +2,7 @@ import { Pressable, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/ui/Icon';
 import { Text } from '@/components/ui/Text';
-import { colors, radius } from '@/theme';
+import { colors, radius, shadows } from '@/theme';
 
 type ChipProps = {
   label: string;
@@ -11,10 +11,12 @@ type ChipProps = {
   icon?: IconName;
   /** Small colour dot before the label, e.g. a status colour. */
   dot?: string;
+  /** Soft shadow so the chip stays readable over a map or photo. */
+  floating?: boolean;
 };
 
 // Filter/toggle chip. Visually 36dp tall; hitSlop brings the touch target to 44dp.
-export function Chip({ label, selected = false, onPress, icon, dot }: ChipProps) {
+export function Chip({ label, selected = false, onPress, icon, dot, floating = false }: ChipProps) {
   const fg = selected ? colors.text.inverse : colors.text.secondary;
   return (
     <Pressable
@@ -23,8 +25,10 @@ export function Chip({ label, selected = false, onPress, icon, dot }: ChipProps)
       accessibilityState={{ selected }}
       accessibilityLabel={label}
       hitSlop={4}
-      className="flex-row items-center"
       style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        ...(floating ? shadows.card : null),
         minHeight: 36,
         paddingHorizontal: 14,
         borderRadius: radius.full,

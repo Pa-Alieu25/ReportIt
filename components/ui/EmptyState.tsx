@@ -44,7 +44,6 @@ export function EmptyState({
         <Button
           label={actionLabel}
           onPress={onAction}
-          variant="secondary"
           fullWidth={false}
           className="mt-5"
         />

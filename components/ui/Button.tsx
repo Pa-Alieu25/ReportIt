@@ -58,7 +58,10 @@ export function Button({
   const v = VARIANTS[variant];
   const inactive = disabled || loading;
 
+  // className goes on a wrapper: NativeWind replaces a Pressable's function
+  // style when it also has a className, which hid the background.
   return (
+    <View className={className} style={{ alignSelf: fullWidth ? 'stretch' : 'flex-start' }}>
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
@@ -68,10 +71,8 @@ export function Button({
         if (haptic) void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
         onPress?.(event);
       }}
-      className={className}
       style={({ pressed }) => ({
         minHeight: HEIGHT[size],
-        alignSelf: fullWidth ? 'stretch' : 'flex-start',
         borderRadius: radius.md,
         backgroundColor: pressed ? v.pressedBg : v.bg,
         borderWidth: v.border ? 1.5 : 0,
@@ -98,5 +99,6 @@ export function Button({
         )}
       </View>
     </Pressable>
+    </View>
   );
 }

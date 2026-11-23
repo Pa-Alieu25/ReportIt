@@ -273,10 +273,10 @@ export default function MapScreen() {
       {/* Floating filters */}
       <View className="absolute inset-x-0" style={{ top: insets.top + 8 }} pointerEvents="box-none">
         <OfflineBanner />
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-1">
-          <Chip label="All problems" selected={categoryFilter === 'All'} onPress={() => setCategoryFilter('All')} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-1.5">
+          <Chip floating label="All problems" selected={categoryFilter === 'All'} onPress={() => setCategoryFilter('All')} />
           {CATEGORY_ORDER.map((category) => (
-            <Chip
+            <Chip floating
               key={category}
               label={CATEGORY_META[category].shortLabel}
               icon={CATEGORY_META[category].icon}
@@ -285,10 +285,10 @@ export default function MapScreen() {
             />
           ))}
         </ScrollView>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-1">
-          <Chip label="Any status" selected={statusFilter === 'All'} onPress={() => setStatusFilter('All')} />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerClassName="gap-2 px-4 py-1.5">
+          <Chip floating label="Any status" selected={statusFilter === 'All'} onPress={() => setStatusFilter('All')} />
           {ALL_STATUSES.map((status) => (
-            <Chip
+            <Chip floating
               key={status}
               label={status}
               dot={statusColors(status).solid}
