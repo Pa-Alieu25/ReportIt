@@ -5,6 +5,14 @@ sanitation issues — potholes, water leaks, broken streetlights, illegal
 dumping, and more — directly to the people who can fix them, with a photo,
 a location, and a live status they can follow through to resolution.
 
+## Project history
+
+ReportIt started as a student mini-project in the original repository,
+[missbastimi/Reportit](https://github.com/missbastimi/Reportit). I (Pa Alieu Njie) built
+the app there, and with the original owner's agreement I have taken over the project
+in this repository. The full commit history is kept. The adaptation for The Gambia
+is on the `feat/gambia-localization` branch.
+
 ## The problem it solves
 
 Community issues in Ghana (and many other places) often go unreported simply
